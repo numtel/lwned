@@ -1,0 +1,7 @@
+*.swp
+*.swo
+package-lock.json
+node_modules
+build
+meta
+solc
