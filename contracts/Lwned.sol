@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "./ERC20.sol";
+import "./IERC20.sol";
 import "./safeTransfer.sol";
 
 contract Loan is ERC20 {
@@ -13,6 +14,7 @@ contract Loan is ERC20 {
   uint public amountToRepay;
   uint public deadlineIssue;
   uint public deadlineRepay;
+  address[] public collateralTokens;
   string public text;
 
   struct Comment {
@@ -28,9 +30,9 @@ contract Loan is ERC20 {
   event LoanRepaid(uint timestamp);
   event LoanDefaulted(uint timestamp);
 
-  string public name = "Loan Backer Receipt";
-  string public symbol = "LOAN";
-  uint8 public decimals = 18;
+  string public name = "Lwned Lender Receipt";
+  string public symbol = "LWNED";
+  uint8 public decimals;
 
   constructor(
     address _factory,
@@ -40,6 +42,8 @@ contract Loan is ERC20 {
     uint _toRepay,
     uint _deadlineIssue,
     uint _deadlineRepay,
+    address[] memory _collateralTokens,
+    uint[] memory _collateralAmounts,
     string memory _text
   ) {
     require(_deadlineIssue > block.timestamp);
@@ -48,50 +52,84 @@ contract Loan is ERC20 {
     factory = _factory;
     borrower = _borrower;
     token = _token;
+    decimals = IERC20(token).decimals();
     amountToGive = _toGive;
     amountToRepay = _toRepay;
     deadlineIssue = _deadlineIssue;
     deadlineRepay = _deadlineRepay;
     text = _text;
+    // Transfer collateral to contract from borrower
+    require(_collateralAmounts.length == _collateralTokens.length);
+    collateralTokens = _collateralTokens;
+    for(uint i = 0; i < collateralTokens.length; i++) {
+      safeTransfer.invokeFrom(collateralTokens[i], borrower, address(this), _collateralAmounts[i]);
+    }
   }
 
   function invest(uint amount) external {
     require(block.timestamp < deadlineIssue);
     require(amount > 0);
+    emit InvestmentChanged(totalSupply, totalSupply + amount);
     _mint(msg.sender, amount);
+    // Don't allow collecting more investment than requested
+    require(totalSupply <= amountToGive);
     safeTransfer.invokeFrom(token, msg.sender, address(this), amount);
   }
 
-  // TODO nyi
   function divest(uint amount) external {
+    emit InvestmentChanged(totalSupply, totalSupply - amount);
+    emit Transfer(msg.sender, address(0), amount);
+    balanceOf[msg.sender] -= amount;
+    totalSupply -= amount;
+    if(status == 0) {
+      // Loan not yet approved
+      safeTransfer.invoke(token, msg.sender, amount);
+    } else if(status == 1) {
+      // Loan has been issued, cannot divest at the moment
+      require(false);
+    } else if(status == 2) {
+      // Loan has been repaid, withdraw mature amount
+      safeTransfer.invoke(token, msg.sender, (amount * amountToRepay) / amountToGive);
+    } else if(status == 3 || (status == 1 && deadlineRepay < block.timestamp)) {
+      // Save users a transaction by allowing a loan to be divested and defaulted at once
+      if(status == 1) loanDefault();
+      // Loan has defaulted, withdraw the collateral
+      for(uint i = 0; i < collateralTokens.length; i++) {
+        uint balance = ERC20(collateralTokens[i]).balanceOf(address(this));
+        safeTransfer.invoke(collateralTokens[i], msg.sender, (amount * balance) / amountToGive);
+      }
+    }
   }
 
-  // TODO nyi
   // Principal investment is met, issue the loan
   function loanIssue() external {
+    require(status == 0);
     require(msg.sender == borrower);
-    require(ERC20(token).balanceOf(address(this)) >= amountToGive);
+    require(ERC20(token).balanceOf(address(this)) == amountToGive);
     status = 1;
     emit LoanIssued(block.timestamp);
     safeTransfer.invoke(token, borrower, amountToGive);
   }
 
-  // TODO nyi
   // Borrower repays loan before deadline
   function loanRepay() external {
+    require(status == 1);
     require(msg.sender == borrower);
     require(deadlineRepay > block.timestamp);
     status = 2;
     emit LoanRepaid(block.timestamp);
     safeTransfer.invokeFrom(token, borrower, address(this), amountToRepay);
+    // Transfer collateral back to borrower
+    for(uint i = 0; i < collateralTokens.length; i++) {
+      uint balance = ERC20(collateralTokens[i]).balanceOf(address(this));
+      safeTransfer.invoke(collateralTokens[i], borrower, balance);
+    }
   }
 
-  // TODO nyi, allow divest to pull from collateral
   // Borrower has not repaid before the deadline
-  function loanDefault() external {
+  function loanDefault() public {
+    require(status == 1);
     require(deadlineRepay < block.timestamp);
-    // Loan must have not been repaid or already defaulted
-    require(status == 0 || status == 1);
     status = 3;
     emit LoanDefaulted(block.timestamp);
   }
@@ -117,6 +155,8 @@ contract Lwned {
     uint _toRepay,
     uint _deadlineIssue,
     uint _deadlineRepay,
+    address[] memory _collateralTokens,
+    uint[] memory _collateralAmounts,
     string memory _text
   ) external {
     Loan application = new Loan(
@@ -127,6 +167,8 @@ contract Lwned {
       _toRepay,
       _deadlineIssue,
       _deadlineRepay,
+      _collateralTokens,
+      _collateralAmounts,
       _text
     );
     loansByBorrower[msg.sender].push(application);
