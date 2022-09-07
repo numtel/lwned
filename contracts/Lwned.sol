@@ -78,6 +78,7 @@ contract Loan is ERC20 {
   }
 
   function divest(uint amount) external {
+    require(balanceOf[msg.sender] >= amount);
     emit InvestmentChanged(totalSupply, totalSupply - amount);
     emit Transfer(msg.sender, address(0), amount);
     balanceOf[msg.sender] -= amount;
@@ -85,9 +86,6 @@ contract Loan is ERC20 {
     if(status == Status.PENDING) {
       // Loan not yet approved
       safeTransfer.invoke(token, msg.sender, amount);
-    } else if(status == Status.ACTIVE) {
-      // Loan has been issued, cannot divest at the moment
-      require(false);
     } else if(status == Status.REPAID) {
       // Loan has been repaid, withdraw mature amount
       safeTransfer.invoke(token, msg.sender, (amount * amountToRepay) / amountToGive);
@@ -98,6 +96,9 @@ contract Loan is ERC20 {
       for(uint i = 0; i < collateralTokens.length; i++) {
         safeTransfer.invoke(collateralTokens[i], msg.sender, (amount * collateralAmounts[i]) / amountToGive);
       }
+    } else if(status == Status.ACTIVE) {
+      // Loan has been issued, cannot divest at the moment
+      require(false);
     }
   }
 
@@ -127,7 +128,6 @@ contract Loan is ERC20 {
   function loanCancel() external {
     require(status == Status.PENDING);
     require(msg.sender == borrower);
-    require(deadlineIssue < block.timestamp);
     status = Status.CANCELED;
     emit LoanCanceled(block.timestamp);
     _refundCollateral();
