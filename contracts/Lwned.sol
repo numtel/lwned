@@ -62,14 +62,9 @@ contract Loan is ERC20 {
     amountToRepay = _toRepay;
     deadlineIssue = _deadlineIssue;
     deadlineRepay = _deadlineRepay;
-    text = _text;
-    // Transfer collateral to contract from borrower
-    require(_collateralAmounts.length == _collateralTokens.length);
     collateralTokens = _collateralTokens;
     collateralAmounts = _collateralAmounts;
-    for(uint i = 0; i < collateralTokens.length; i++) {
-      safeTransfer.invokeFrom(collateralTokens[i], borrower, address(this), collateralAmounts[i]);
-    }
+    text = _text;
   }
 
   function invest(uint amount) external {
@@ -141,8 +136,7 @@ contract Loan is ERC20 {
   // Transfer collateral back to borrower
   function _refundCollateral() internal {
     for(uint i = 0; i < collateralTokens.length; i++) {
-      uint balance = ERC20(collateralTokens[i]).balanceOf(address(this));
-      safeTransfer.invoke(collateralTokens[i], borrower, balance);
+      safeTransfer.invoke(collateralTokens[i], borrower, collateralAmounts[i]);
     }
   }
 
@@ -193,6 +187,16 @@ contract Lwned {
       _collateralAmounts,
       _text
     );
+
+    // Transfer collateral to contract from borrower
+    // User won't know loan contract instance address at this time
+    // so they can't approve the spends to that address,
+    // so perform the collateral transfer here
+    require(_collateralAmounts.length == _collateralTokens.length);
+    for(uint i = 0; i < _collateralTokens.length; i++) {
+      safeTransfer.invokeFrom(_collateralTokens[i], msg.sender, address(application), _collateralAmounts[i]);
+    }
+
     loansByBorrower[msg.sender].push(application);
     pendingApplications.insert(address(application));
     emit NewApplication(msg.sender, address(application));
