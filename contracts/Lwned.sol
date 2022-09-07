@@ -210,6 +210,10 @@ contract Lwned {
 
   }
 
+  function countOf(address account) external view returns(uint) {
+    return loansByBorrower[account].length;
+  }
+
   function pendingCount() external view returns(uint) {
     return pendingApplications.count();
   }

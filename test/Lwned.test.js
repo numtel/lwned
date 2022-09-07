@@ -32,6 +32,12 @@ exports.createLoan = async function({
 
   assert.strictEqual(result.events.NewApplication.returnValues.borrower, accounts[0]);
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
+  // Is loan listed as pending on factory?
+  assert.strictEqual(await factory.methods.pendingCount().call(), '1');
+  assert.strictEqual(await factory.methods.pendingAt(0).call(), loan.options.address);
+  // Is loan listed by borrower on factory?
+  assert.strictEqual(await factory.methods.countOf(accounts[0]).call(), '1');
+  assert.strictEqual(await factory.methods.loansByBorrower(accounts[0], 0).call(), loan.options.address);
 
   assert.strictEqual(await loan.methods.status().call(), '0');
   assert.strictEqual(Number(await token.methods.balanceOf(accounts[0]).call()), interest);
@@ -44,9 +50,17 @@ exports.createLoan = async function({
 
   // Issue the loan
   await loan.sendFrom(accounts[0]).loanIssue();
+  // Did loan move from pending to active on factory?
+  assert.strictEqual(await factory.methods.pendingCount().call(), '0');
+  assert.strictEqual(await factory.methods.activeCount().call(), '1');
+  assert.strictEqual(await factory.methods.activeAt(0).call(), loan.options.address);
+
   assert.strictEqual(Number(await token.methods.balanceOf(accounts[0]).call()), toRepay);
   assert.strictEqual(await loan.methods.status().call(), '1');
 
+  // Divest throws during active
+  assert.strictEqual(await throws(() =>
+    loan.sendFrom(accounts[1]).divest(toGive)), true);
 
   // Repay the loan
   await token.sendFrom(accounts[0]).approve(loan.options.address, toRepay);
@@ -65,3 +79,7 @@ exports.createLoan = async function({
 
 };
 
+
+// TODO Divest before approval, borrower cancels
+// TODO Divest after default
+// TODO Test with multiple collateral tokens, investors of different amounts
