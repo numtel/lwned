@@ -179,7 +179,7 @@ exports.loanDefaulted = async function({
 
 }
 
-exports.multipleCollateralAndInvestor = async function({
+exports.multipleCollateralAndInvestorDefault = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
   const factory = await deployContract(accounts[0], 'Lwned');
@@ -233,5 +233,64 @@ exports.multipleCollateralAndInvestor = async function({
   await loan.sendFrom(accounts[2]).divest(toGive * give2);
   assert.strictEqual(Number(await token.methods.balanceOf(accounts[2]).call()), collateral * give2);
   assert.strictEqual(Number(await token2.methods.balanceOf(accounts[2]).call()), collateral2 * give2);
+
+}
+
+
+exports.multipleCollateralAndInvestorRepay = async function({
+  web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
+}) {
+  const factory = await deployContract(accounts[0], 'Lwned');
+  const token = await deployContract(accounts[0], 'MockERC20');
+  const token2 = await deployContract(accounts[0], 'MockERC20');
+
+  const now = (await web3.eth.getBlock('latest')).timestamp;
+  const deadlineIssue = 30;
+  const deadlineRepay = 300;
+  const toGive = 1000000;
+  const toRepay  = 1090000;
+  const interest = toRepay - toGive;
+  const collateral = 500000;
+  const collateral2 = 800000;
+  const submissionStatement = "heyo gimme some skrilla";
+
+  await token.sendFrom(accounts[0]).mint(accounts[0], collateral + interest);
+  await token.sendFrom(accounts[0]).approve(factory.options.address, collateral);
+  await token2.sendFrom(accounts[0]).mint(accounts[0], collateral2);
+  await token2.sendFrom(accounts[0]).approve(factory.options.address, collateral2);
+
+  // Create loan
+  const result = await factory.sendFrom(accounts[0]).newApplication(
+    token.options.address,
+    toGive,
+    toRepay,
+    now + deadlineIssue,
+    now + deadlineIssue + deadlineRepay,
+    [token.options.address, token2.options.address],
+    [collateral, collateral2],
+    submissionStatement
+  );
+  const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
+
+  // Invest and divest from the loan
+  const give1 = 0.25, give2 = 1 - give1;
+  await token.sendFrom(accounts[1]).mint(accounts[1], toGive * give1);
+  await token.sendFrom(accounts[1]).approve(loan.options.address, toGive * give1);
+  await loan.sendFrom(accounts[1]).invest(toGive * give1);
+  await token.sendFrom(accounts[2]).mint(accounts[2], toGive * give2);
+  await token.sendFrom(accounts[2]).approve(loan.options.address, toGive * give2);
+  await loan.sendFrom(accounts[2]).invest(toGive * give2);
+
+  await loan.sendFrom(accounts[0]).loanIssue();
+  await token.sendFrom(accounts[0]).approve(loan.options.address, toRepay);
+  await loan.sendFrom(accounts[0]).loanRepay();
+  assert.strictEqual(Number(await token.methods.balanceOf(accounts[0]).call()), collateral);
+  assert.strictEqual(Number(await token2.methods.balanceOf(accounts[0]).call()), collateral2);
+
+  // Investors collect their shares of the interest
+  await loan.sendFrom(accounts[1]).divest(toGive * give1);
+  assert.strictEqual(Number(await token.methods.balanceOf(accounts[1]).call()), toRepay * give1);
+  await loan.sendFrom(accounts[2]).divest(toGive * give2);
+  assert.strictEqual(Number(await token.methods.balanceOf(accounts[2]).call()), toRepay * give2);
 
 }
