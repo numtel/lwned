@@ -4,9 +4,11 @@ pragma solidity ^0.8.13;
 import "./ERC20.sol";
 import "./IERC20.sol";
 import "./safeTransfer.sol";
+import "./AddressSet.sol";
+using AddressSet for AddressSet.Set;
 
 contract Loan is ERC20 {
-  address public factory;
+  Lwned public factory;
   address public borrower;
   address public token;
   uint8 public status;
@@ -29,13 +31,14 @@ contract Loan is ERC20 {
   event LoanIssued(uint timestamp);
   event LoanRepaid(uint timestamp);
   event LoanDefaulted(uint timestamp);
+  event LoanCanceled(uint timestamp);
 
   string public name = "Lwned Lender Receipt";
   string public symbol = "LWNED";
   uint8 public decimals;
 
   constructor(
-    address _factory,
+    Lwned _factory,
     address _borrower,
     address _token,
     uint _toGive,
@@ -105,9 +108,10 @@ contract Loan is ERC20 {
   function loanIssue() external {
     require(status == 0);
     require(msg.sender == borrower);
-    require(ERC20(token).balanceOf(address(this)) == amountToGive);
+    require(totalSupply == amountToGive);
     status = 1;
     emit LoanIssued(block.timestamp);
+    factory.markAsActive();
     safeTransfer.invoke(token, borrower, amountToGive);
   }
 
@@ -119,7 +123,21 @@ contract Loan is ERC20 {
     status = 2;
     emit LoanRepaid(block.timestamp);
     safeTransfer.invokeFrom(token, borrower, address(this), amountToRepay);
-    // Transfer collateral back to borrower
+    _refundCollateral();
+  }
+
+  // Borrower withdraws collateral of loan that never issued
+  function loanCancel() external {
+    require(status == 0);
+    require(msg.sender == borrower);
+    require(deadlineIssue < block.timestamp);
+    status = 4;
+    emit LoanCanceled(block.timestamp);
+    _refundCollateral();
+  }
+
+  // Transfer collateral back to borrower
+  function _refundCollateral() internal {
     for(uint i = 0; i < collateralTokens.length; i++) {
       uint balance = ERC20(collateralTokens[i]).balanceOf(address(this));
       safeTransfer.invoke(collateralTokens[i], borrower, balance);
@@ -146,8 +164,10 @@ contract Loan is ERC20 {
 
 contract Lwned {
   mapping(address => Loan[]) public loansByBorrower;
-  Loan[] public pendingApplications;
-  Loan[] public activeLoans;
+  AddressSet.Set pendingApplications;
+  AddressSet.Set activeLoans;
+
+  event NewApplication(address indexed borrower, address loan);
 
   function newApplication(
     address _token,
@@ -160,7 +180,7 @@ contract Lwned {
     string memory _text
   ) external {
     Loan application = new Loan(
-      address(this),
+      this,
       msg.sender,
       _token,
       _toGive,
@@ -172,7 +192,32 @@ contract Lwned {
       _text
     );
     loansByBorrower[msg.sender].push(application);
-    pendingApplications.push(application);
+    pendingApplications.insert(address(application));
+    emit NewApplication(msg.sender, address(application));
+  }
+
+  // Invoked by the Loan contract internally
+  function markAsActive() external {
+    require(pendingApplications.exists(msg.sender));
+    pendingApplications.remove(msg.sender);
+    activeLoans.insert(msg.sender);
+
+  }
+
+  function pendingCount() external view returns(uint) {
+    return pendingApplications.count();
+  }
+
+  function pendingAt(uint index) external view returns(address) {
+    return pendingApplications.keyList[index];
+  }
+
+  function activeCount() external view returns(uint) {
+    return activeLoans.count();
+  }
+
+  function activeAt(uint index) external view returns(address) {
+    return activeLoans.keyList[index];
   }
 
 }

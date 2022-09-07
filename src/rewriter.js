@@ -1,5 +1,3 @@
-// TODO convert to module .mjs
-
 process.stdin.on('readable', async () => {
   let chunk;
   while (null !== (chunk = process.stdin.read())) {
