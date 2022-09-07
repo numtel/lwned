@@ -11,12 +11,14 @@ contract Loan is ERC20 {
   Lwned public factory;
   address public borrower;
   address public token;
-  uint8 public status;
+  enum Status { PENDING, ACTIVE, REPAID, DEFAULTED, CANCELED }
+  Status public status;
   uint public amountToGive;
   uint public amountToRepay;
   uint public deadlineIssue;
   uint public deadlineRepay;
   address[] public collateralTokens;
+  uint[] public collateralAmounts;
   string public text;
 
   struct Comment {
@@ -64,8 +66,9 @@ contract Loan is ERC20 {
     // Transfer collateral to contract from borrower
     require(_collateralAmounts.length == _collateralTokens.length);
     collateralTokens = _collateralTokens;
+    collateralAmounts = _collateralAmounts;
     for(uint i = 0; i < collateralTokens.length; i++) {
-      safeTransfer.invokeFrom(collateralTokens[i], borrower, address(this), _collateralAmounts[i]);
+      safeTransfer.invokeFrom(collateralTokens[i], borrower, address(this), collateralAmounts[i]);
     }
   }
 
@@ -84,32 +87,31 @@ contract Loan is ERC20 {
     emit Transfer(msg.sender, address(0), amount);
     balanceOf[msg.sender] -= amount;
     totalSupply -= amount;
-    if(status == 0) {
+    if(status == Status.PENDING) {
       // Loan not yet approved
       safeTransfer.invoke(token, msg.sender, amount);
-    } else if(status == 1) {
+    } else if(status == Status.ACTIVE) {
       // Loan has been issued, cannot divest at the moment
       require(false);
-    } else if(status == 2) {
+    } else if(status == Status.REPAID) {
       // Loan has been repaid, withdraw mature amount
       safeTransfer.invoke(token, msg.sender, (amount * amountToRepay) / amountToGive);
-    } else if(status == 3 || (status == 1 && deadlineRepay < block.timestamp)) {
+    } else if(status == Status.DEFAULTED || (status == Status.ACTIVE && deadlineRepay < block.timestamp)) {
       // Save users a transaction by allowing a loan to be divested and defaulted at once
-      if(status == 1) loanDefault();
+      if(status == Status.ACTIVE) loanDefault();
       // Loan has defaulted, withdraw the collateral
       for(uint i = 0; i < collateralTokens.length; i++) {
-        uint balance = ERC20(collateralTokens[i]).balanceOf(address(this));
-        safeTransfer.invoke(collateralTokens[i], msg.sender, (amount * balance) / amountToGive);
+        safeTransfer.invoke(collateralTokens[i], msg.sender, (amount * collateralAmounts[i]) / amountToGive);
       }
     }
   }
 
   // Principal investment is met, issue the loan
   function loanIssue() external {
-    require(status == 0);
+    require(status == Status.PENDING);
     require(msg.sender == borrower);
     require(totalSupply == amountToGive);
-    status = 1;
+    status = Status.ACTIVE;
     emit LoanIssued(block.timestamp);
     factory.markAsActive();
     safeTransfer.invoke(token, borrower, amountToGive);
@@ -117,10 +119,10 @@ contract Loan is ERC20 {
 
   // Borrower repays loan before deadline
   function loanRepay() external {
-    require(status == 1);
+    require(status == Status.ACTIVE);
     require(msg.sender == borrower);
     require(deadlineRepay > block.timestamp);
-    status = 2;
+    status = Status.REPAID;
     emit LoanRepaid(block.timestamp);
     safeTransfer.invokeFrom(token, borrower, address(this), amountToRepay);
     _refundCollateral();
@@ -128,10 +130,10 @@ contract Loan is ERC20 {
 
   // Borrower withdraws collateral of loan that never issued
   function loanCancel() external {
-    require(status == 0);
+    require(status == Status.PENDING);
     require(msg.sender == borrower);
     require(deadlineIssue < block.timestamp);
-    status = 4;
+    status = Status.CANCELED;
     emit LoanCanceled(block.timestamp);
     _refundCollateral();
   }
@@ -146,9 +148,9 @@ contract Loan is ERC20 {
 
   // Borrower has not repaid before the deadline
   function loanDefault() public {
-    require(status == 1);
+    require(status == Status.ACTIVE);
     require(deadlineRepay < block.timestamp);
-    status = 3;
+    status = Status.DEFAULTED;
     emit LoanDefaulted(block.timestamp);
   }
 
