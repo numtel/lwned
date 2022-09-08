@@ -27,6 +27,7 @@ async function loadPage() {
     pageAddress = config.contracts.LwnedFrontendIndex.address;
   }
   const web3 = await web3ReadOnly();
+  // TODO If no render function, render as a profile
   const page = decodeAscii((await web3.eth.call({
     to: pageAddress,
     data: web3.eth.abi.encodeFunctionSignature('render()'),
