@@ -15,9 +15,9 @@ function replaceTplStrings(input) {
       if(j>0) {
         const closeBrace = curParts[j].indexOf('}');
         if(closeBrace === -1) throw new Error('Fooey');
-        curParts[j] = curParts[j].slice(0, closeBrace) + ',"' + curParts[j].slice(closeBrace + 1) + '"';
+        curParts[j] = curParts[j].slice(0, closeBrace) + ',"' + curParts[j].slice(closeBrace + 1).replace(/"/g, '\\"') + '"';
       } else {
-        curParts[j] = '"' + curParts[j] + '"';
+        curParts[j] = '"' + curParts[j].replace(/"/g, '\\"') + '"';
       }
     }
     parts[i] = `abi.encodePacked(${curParts.join(',')})`;

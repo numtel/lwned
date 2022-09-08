@@ -141,6 +141,7 @@ contract Loan is ERC20 {
   }
 
   // Borrower has not repaid before the deadline
+  // Anybody can call this, it doesn't matter
   function loanDefault() public {
     require(status == Status.ACTIVE);
     require(deadlineRepay < block.timestamp);

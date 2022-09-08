@@ -1,10 +1,11 @@
 {
   "name": "lwned",
   "version": "1.0.0",
-  "description": "",
+  "description": "Partially collateralized loans",
   "scripts": {
     "test": "node test/index.js",
     "todo": "bash -c \"grep -rn 'TODO' --exclude-dir={node_modules,build} --exclude={*.min*,*.swp,package.json,solc} *\"",
+    "dev-chain": "node src/dev-chain.js",
     "build-dev": "./src/rewriteAll.sh && ./solc --bin --abi --overwrite -o build trans/*.sol",
     "build-test": "./solc --bin --abi --overwrite -o build test/contracts/*.sol",
     "build-prod": "./src/rewriteAll.sh && ./solc --bin --abi --overwrite -o build --optimize contracts/*.sol"
