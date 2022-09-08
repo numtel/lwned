@@ -148,6 +148,10 @@ contract Loan is ERC20 {
     emit LoanDefaulted(block.timestamp);
   }
 
+  function collateralCount() external view returns(uint) {
+    return collateralTokens.length;
+  }
+
   function commentCount() external view returns(uint) {
     return comments.length;
   }
