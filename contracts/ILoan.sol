@@ -13,6 +13,8 @@ interface ILoan is IERC20 {
   function deadlineIssue() external view returns(uint);
   function deadlineRepay() external view returns(uint);
   function collateralCount() external view returns(uint);
+  function allCollateralTokens() external view returns(address[] memory);
+  function allCollateralAmounts() external view returns(uint[] memory);
   function collateralTokens(uint index) external view returns(address);
   function collateralAmounts(uint index) external view returns(uint);
   function text() external view returns(string memory);

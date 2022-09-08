@@ -152,6 +152,14 @@ contract Loan is ERC20 {
     return collateralTokens.length;
   }
 
+  function allCollateralTokens() external view returns(address[] memory) {
+    return collateralTokens;
+  }
+
+  function allCollateralAmounts() external view returns(uint[] memory) {
+    return collateralAmounts;
+  }
+
   function commentCount() external view returns(uint) {
     return comments.length;
   }
