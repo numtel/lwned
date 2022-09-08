@@ -49,4 +49,64 @@ contract LwnedBrowser {
     }
     return out;
   }
+
+  function pending(
+    ILwned factory,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.pendingCount();
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      ILoan loan = ILoan(factory.pendingAt(startIndex + i));
+      out[i] = LoanDetails(
+        loan.borrower(),
+        loan.token(),
+        loan.status(),
+        loan.amountToGive(),
+        loan.amountToRepay(),
+        loan.deadlineIssue(),
+        loan.deadlineRepay(),
+        loan.allCollateralTokens(),
+        loan.allCollateralAmounts(),
+        loan.commentCount(),
+        loan.text()
+      );
+    }
+    return out;
+  }
+
+  function active(
+    ILwned factory,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.activeCount();
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      ILoan loan = ILoan(factory.activeAt(startIndex + i));
+      out[i] = LoanDetails(
+        loan.borrower(),
+        loan.token(),
+        loan.status(),
+        loan.amountToGive(),
+        loan.amountToRepay(),
+        loan.deadlineIssue(),
+        loan.deadlineRepay(),
+        loan.allCollateralTokens(),
+        loan.allCollateralAmounts(),
+        loan.commentCount(),
+        loan.text()
+      );
+    }
+    return out;
+  }
 }
