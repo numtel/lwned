@@ -7,7 +7,9 @@
 <script src="deps/web3modal.min.js"></script>
 <script src="wallet.js"></script>
 </head>
-<body style="white-space:pre-wrap; max-width:760px; margin:20px auto; padding: 20px;">
+<body style="max-width:760px; margin:20px auto; padding: 20px;">
+<p><a href="https://newgeocities.com/webmaster/blog/lwned.html">Get Lwned!</a></p>
+<div>
 <script>
 function decodeAscii(input) {
   let out = '';
@@ -16,14 +18,23 @@ function decodeAscii(input) {
   }
   return out;
 }
-(async function() {
+const parent = document.currentScript.parentNode;
+async function loadPage() {
   const config = await configPromise;
+  if(window.location.hash.match(/^#0x[a-fA-F0-9]{40}$/)) {
+    pageAddress = window.location.hash.slice(1);
+  } else {
+    pageAddress = config.contracts.LwnedFrontendIndex.address;
+  }
   const web3 = await web3ReadOnly();
   const page = decodeAscii(await web3.eth.call({
-    to: config.contracts.LwnedFrontend.address,
-    data: web3.eth.abi.encodeFunctionSignature('index()'),
+    to: pageAddress,
+    data: web3.eth.abi.encodeFunctionSignature('render()'),
   }));
-  document.body.innerHTML = page;
+  parent.innerHTML = page;
 
-})();
+}
+window.onhashchange = loadPage;
+loadPage();
 </script>
+</div>

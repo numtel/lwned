@@ -3,19 +3,21 @@ pragma solidity ^0.8.13;
 
 import "./ILwned.sol";
 import "./ILoan.sol";
-import "./ILwnedBrowser.sol";
 import "./Strings.sol";
 
-contract LwnedFrontend {
+contract LwnedFrontendIndex {
   ILwned public factory;
+  address public pendingPage;
 
-  constructor(ILwned _factory) {
+  constructor(ILwned _factory, address _pendingPage) {
     factory = _factory;
+    pendingPage = _pendingPage;
   }
 
-  function index() external view returns(bytes memory) {
+  function render() external view returns(bytes memory) {
     return `
-      <p>Pending loan count: ${Strings.toString(factory.pendingCount())}</p>
+      <p>Pending loan count: ${Strings.toString(factory.pendingCount())}
+        <a href="#${Strings.toHexString(pendingPage)}">View Pending...</a></p>
       <p>Issued loan count: ${Strings.toString(factory.activeCount())}</p>
       <form method="tx" action="newApplication">
         <fieldset><legend>New Loan Application</legend>

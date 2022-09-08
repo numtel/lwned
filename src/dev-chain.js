@@ -31,8 +31,13 @@ const contracts = {
   MockVerification: {},
   Lwned: {},
   LwnedBrowser: {},
-  LwnedFrontend: { constructorArgs: [
+  LwnedFrontendPending: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
+    () => contracts.LwnedBrowser.instance.options.address,
+  ]},
+  LwnedFrontendIndex: { constructorArgs: [
+    () => contracts.Lwned.instance.options.address,
+    () => contracts.LwnedFrontendPending.instance.options.address,
   ]},
 };
 
@@ -174,6 +179,10 @@ async function deployContracts() {
   process.stdout.write(PROMPT);
 }
 
+
+
+
+// Begin frontend server
 function serveFile(filename, rewrite) {
   return {
     ['/' + (rewrite === undefined ? filename : rewrite)]: {
@@ -194,7 +203,6 @@ class DevServer extends HTMLServer {
       ...serveFile('wallet.js'),
       ...serveFile('../build/config.json', 'config.json'),
     };
-    console.log(opt);
     super(opt);
   }
 }
