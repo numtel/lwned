@@ -75,3 +75,67 @@ async function wallet() {
   });
   return {web3, accounts, config};
 }
+
+function decodeAscii(input) {
+  let out = '';
+  for(let i = 0; i<input.length; i+=2) {
+    out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
+  }
+  return out;
+}
+
+// Turn 1230000 into 1.23
+function applyDecimals(input, decimals) {
+  decimals = Number(decimals);
+  input = String(input);
+  if(input === '0') return input;
+  while(input.length <= decimals) {
+    input = '0' + input;
+  }
+  const sep = decimalSeparator();
+  input = input.slice(0, -decimals) + sep + input.slice(-decimals);
+  while(input[input.length - 1] === '0') {
+    input = input.slice(0, -1);
+  }
+  if(input[input.length - 1] === sep) {
+    input = input.slice(0, -1);
+  }
+  return input;
+}
+
+// Turn 1.23 into 1230000
+function reverseDecimals(input, decimals) {
+  decimals = Number(decimals);
+  input = String(input);
+  if(input === '0') return input;
+  const sep = decimalSeparator();
+  const sepIndex = input.indexOf(sep);
+  if(sepIndex === -1) {
+    // Add all digits to end
+    input += zeroStr(decimals);
+  } else {
+    const trailingZeros = decimals - (input.length - sepIndex - 1);
+    if(trailingZeros < 0) {
+      // Too many decimal places input
+      input = input.slice(0, sepIndex) + input.slice(sepIndex + 1, trailingZeros);
+    } else {
+      // Right pad
+      input = input.slice(0, sepIndex) + input.slice(sepIndex + 1) + zeroStr(trailingZeros);
+    }
+  }
+  return input;
+}
+
+function zeroStr(length) {
+  let str = '';
+  while(str.length < length) {
+    str += '0';
+  }
+  return str;
+}
+
+// From https://stackoverflow.com/q/2085275
+function decimalSeparator() {
+  const n = 1.1;
+  return n.toLocaleString().substring(1, 2);
+}

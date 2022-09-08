@@ -34,6 +34,16 @@ async function loadPage() {
   })).slice(130));
   parent.innerHTML = page;
 
+  // Scripts are not executed when inserted using innerHTML
+  // https://stackoverflow.com/a/47614491
+  Array.from(parent.querySelectorAll('script')).forEach(oldScript => {
+    const newScript = document.createElement('script');
+    Array.from(oldScript.attributes)
+      .forEach(attr => newScript.setAttribute(attr.name, attr.value));
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+
 }
 window.onhashchange = loadPage;
 loadPage();
