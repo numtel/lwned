@@ -13,7 +13,7 @@
 <script>
 function decodeAscii(input) {
   let out = '';
-  for(let i = 2; i<input.length; i+=2) {
+  for(let i = 0; i<input.length; i+=2) {
     out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
   }
   return out;
@@ -27,10 +27,10 @@ async function loadPage() {
     pageAddress = config.contracts.LwnedFrontendIndex.address;
   }
   const web3 = await web3ReadOnly();
-  const page = decodeAscii(await web3.eth.call({
+  const page = decodeAscii((await web3.eth.call({
     to: pageAddress,
     data: web3.eth.abi.encodeFunctionSignature('render()'),
-  }));
+  })).slice(130));
   parent.innerHTML = page;
 
 }
