@@ -18,6 +18,11 @@ contract LwnedBrowser {
     uint commentCount;
     string text;
   }
+  struct Comment {
+    address author;
+    uint timestamp;
+    string text;
+  }
 
   function byBorrower(
     ILwned factory,
@@ -106,6 +111,24 @@ contract LwnedBrowser {
         loan.commentCount(),
         loan.text()
       );
+    }
+    return out;
+  }
+
+  function comments(
+    ILoan loan,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(Comment[] memory) {
+    uint itemCount = loan.commentCount();
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    Comment[] memory out = new Comment[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      ILoan.Comment memory raw = loan.comments(i);
+      out[i] = Comment(raw.author, raw.timestamp, raw.text);
     }
     return out;
   }
