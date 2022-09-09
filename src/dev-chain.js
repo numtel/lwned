@@ -201,6 +201,7 @@ class DevServer extends HTMLServer {
       ...serveFile('deps/coinbase.min.js'),
       ...serveFile('deps/web3modal.min.js'),
       ...serveFile('wallet.js'),
+      ...serveFile('style.css'),
       ...serveFile('../build/config.json', 'config.json'),
     };
     super(opt);
