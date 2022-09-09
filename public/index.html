@@ -11,13 +11,6 @@
 <p><a href="https://newgeocities.com/webmaster/blog/lwned.html">Get Lwned!</a></p>
 <div>
 <script>
-function decodeAscii(input) {
-  let out = '';
-  for(let i = 0; i<input.length; i+=2) {
-    out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
-  }
-  return out;
-}
 const parent = document.currentScript.parentNode;
 async function loadPage() {
   const config = await configPromise;
@@ -28,10 +21,10 @@ async function loadPage() {
   }
   const web3 = await web3ReadOnly();
   // TODO If no render function, render as a profile
-  const page = decodeAscii((await web3.eth.call({
+  const page = web3.eth.abi.decodeParameter('string', await web3.eth.call({
     to: pageAddress,
     data: web3.eth.abi.encodeFunctionSignature('render()'),
-  })).slice(130));
+  }));
   parent.innerHTML = page;
 
   // Scripts are not executed when inserted using innerHTML

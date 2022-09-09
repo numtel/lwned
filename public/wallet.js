@@ -76,14 +76,6 @@ async function wallet() {
   return {web3, accounts, config};
 }
 
-function decodeAscii(input) {
-  let out = '';
-  for(let i = 0; i<input.length; i+=2) {
-    out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
-  }
-  return out;
-}
-
 // Turn 1230000 into 1.23
 function applyDecimals(input, decimals) {
   decimals = Number(decimals);
@@ -138,4 +130,35 @@ function zeroStr(length) {
 function decimalSeparator() {
   const n = 1.1;
   return n.toLocaleString().substring(1, 2);
+}
+
+function ellipseAddress(address) {
+  return address.slice(0, 6) + '...' + address.slice(-4);
+}
+
+function remaining(seconds) {
+  const units = [
+    { value: 1, unit: 'second' },
+    { value: 60, unit: 'minute' },
+    { value: 60 * 60, unit: 'hour' },
+    { value: 60 * 60 * 24, unit: 'day' },
+  ];
+  let remaining = seconds;
+  let out = [];
+  for(let i = units.length - 1; i >= 0;  i--) {
+    if(remaining >= units[i].value) {
+      const count = Math.floor(remaining / units[i].value);
+      out.push(count.toString(10) + ' ' + units[i].unit + (count !== 1 ? 's' : ''));
+      remaining = remaining - (count * units[i].value);
+    }
+  }
+  return out.join(', ');
+}
+
+const ZERO_ACCOUNT = '0x0000000000000000000000000000000000000000';
+
+function delay(ms) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), ms);
+  });
 }

@@ -10,7 +10,7 @@ process.stdin.on('readable', async () => {
 function replaceTplStrings(input) {
   const parts = input.split('`');
   for(let i = 1; i<parts.length; i+=2) {
-    const curParts = parts[i].replace(/\n/g, '').split('${');
+    const curParts = parts[i].replace(/\n/g, '\\n').split('${');
     for(let j = 0; j<curParts.length; j++) {
       if(j>0) {
         const closeBrace = curParts[j].indexOf('}');
