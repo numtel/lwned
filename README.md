@@ -1,3 +1,4 @@
+![Lwned Logo](public/logo.png)
 # Lwned
 
 "Need cash? Get Lwned!"

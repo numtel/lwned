@@ -38,8 +38,13 @@ module.exports = class HTMLServer extends http.Server {
           }
           return;
         }
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(result);
+        if(typeof result === 'string') {
+          res.writeHead(200, {'Content-Type': 'text/html'});
+          res.end(result);
+        } else {
+          res.writeHead(200, {'Content-Type': result.mime});
+          res.end(result.data);
+        }
         return;
       }
       res.writeHead(404, {'Content-Type': 'text/plain'});

@@ -183,11 +183,14 @@ async function deployContracts() {
 
 
 // Begin frontend server
-function serveFile(filename, rewrite) {
+function serveFile(filename, rewrite, mime) {
   return {
     ['/' + (rewrite === undefined ? filename : rewrite)]: {
       async GET(req, urlMatch, parsedUrl) {
-        return fs.readFileSync(PUBLIC_DIR + filename, { encoding: 'utf8' });
+        return {
+          mime: mime ? mime : 'text/html',
+          data: fs.readFileSync(PUBLIC_DIR + filename, { encoding: !mime ? 'utf8' : undefined })
+        };
       }
     }
   }
@@ -202,6 +205,7 @@ class DevServer extends HTMLServer {
       ...serveFile('deps/web3modal.min.js'),
       ...serveFile('wallet.js'),
       ...serveFile('style.css'),
+      ...serveFile('logo.png', undefined,'image/png'),
       ...serveFile('../build/config.json', 'config.json'),
     };
     super(opt);
