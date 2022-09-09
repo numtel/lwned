@@ -131,7 +131,7 @@ contract LwnedFrontendIndex {
           el.parentNode.appendChild(div);
         }
       </script>
-      <button onclick="connect()">Connect Wallet to Start New Loan Application</button>
+      <button onclick="connect()">Start New Loan Application</button>
       <form id="new-loan" style="display:none;" onsubmit="submitForm(this); return false;">
         <fieldset><legend>New Loan Application</legend>
         <dl>

@@ -89,7 +89,7 @@ const commands = {
     if(address.length !== 42) address = accounts[address];
     if(!address) return console.log('Address required');
     const token = await commands.deployToken();
-    const oneToken = '100000000000000000';
+    const oneToken = '10000000000000000';
     await commands.mintToken(token, address, oneToken);
     await web3.eth.sendTransaction({
       to: token,
@@ -111,7 +111,7 @@ const commands = {
       (await currentTimestamp()) + SECONDS_PER_DAY * 3,
       [ token ],
       [ oneToken ],
-      'Test loan application'
+      'Test <em>loan</em> application'
     ).send({ from: address, gas: GAS_AMOUNT });
     console.log('New loan at', result.events.NewApplication.returnValues.loan);
   },

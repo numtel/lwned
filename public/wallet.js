@@ -76,6 +76,14 @@ async function wallet() {
   return {web3, accounts, config};
 }
 
+function decodeAscii(input) {
+  let out = '';
+  for(let i = 0; i<input.length; i+=2) {
+    out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
+  }
+  return out;
+}
+
 // Turn 1230000 into 1.23
 function applyDecimals(input, decimals) {
   decimals = Number(decimals);
