@@ -13,8 +13,7 @@ const PROMPT = '> ';
 const SECONDS_PER_DAY = 60 * 60 * 24;
 const SECONDS_PER_YEAR = SECONDS_PER_DAY * 365;
 
-const currentTimestamp = (returnDay) =>
-  Math.floor(Date.now() / (1000 * (returnDay ? SECONDS_PER_DAY : 1)));
+const currentTimestamp = async () => (await web3.eth.getBlock()).timestamp;
 
 const ganacheServer = ganache.server({
   wallet: { mnemonic: devSeed.seed },
@@ -69,6 +68,7 @@ const commands = {
       data: bytecode
     }).send({ from: accounts[0], gas: GAS_AMOUNT });
     console.log('New token:', deployed.options.address);
+    return deployed.options.address;
   },
   mintToken: async function(tokenAddress, accountAddress, amount) {
     if(arguments.length < 3) return console.log('3 arguments required');
@@ -83,6 +83,37 @@ const commands = {
       accountAddress, amount
     ).send({ from: accounts[0], gas: GAS_AMOUNT });
     console.log('New Balance:', await token.methods.balanceOf(accountAddress).call());
+  },
+  fastApply: async function(address) {
+    if(arguments.length === 0) return console.log('Address required');
+    if(address.length !== 42) address = accounts[address];
+    if(!address) return console.log('Address required');
+    const token = await commands.deployToken();
+    const oneToken = '100000000000000000';
+    await commands.mintToken(token, address, oneToken);
+    await web3.eth.sendTransaction({
+      to: token,
+      from: address,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'approve', type: 'function',
+        inputs: [
+          { type: 'address', name:'spender'},
+          { type: 'uint256', name:'amount'},
+        ]
+      }, [
+        contracts.Lwned.instance.options.address,
+        oneToken
+      ])
+    });
+    const result = await contracts.Lwned.instance.methods.newApplication(
+      token, oneToken, oneToken,
+      (await currentTimestamp()) + SECONDS_PER_DAY * 1,
+      (await currentTimestamp()) + SECONDS_PER_DAY * 3,
+      [ token ],
+      [ oneToken ],
+      'Test loan application'
+    ).send({ from: address, gas: GAS_AMOUNT });
+    console.log('New loan at', result.events.NewApplication.returnValues.loan);
   },
   verify: async function(address, expiration) {
     if(arguments.length === 0) return console.log('Address required');

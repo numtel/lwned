@@ -27,7 +27,7 @@ $ chmod +x solc
 
 ## Running development frontend
 
-```
+```sh
 # To build test/contracts/*.sol (test token)
 $ npm run build-test
 # To transpile and build contracts/*.sol (everything else)
@@ -47,6 +47,12 @@ accounts
 deployToken
 # Make new tokens
 mintToken [tokenAddress] [accountAddress] [amount]
+# Convenience method for testing:
+#  deploy a token,
+#  mint to borrower,
+#  approve spend,
+#  and submit loan application
+fastApply [address]
 # Set a user as passport verified, expiration default: 1 year
 verify [address] [expiration]
 # Fetch the expiration value
