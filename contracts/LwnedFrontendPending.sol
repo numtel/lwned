@@ -82,11 +82,21 @@ contract LwnedFrontendPending {
 
   function renderLoan(ILwnedBrowser.LoanDetails memory pending) internal view returns(bytes memory) {
     IERC20 token = IERC20(pending.token);
+    bool principalMet = ILoan(pending.loan).totalSupply() == pending.amountToGive;
+    bytes memory issueButton;
+    if(principalMet) {
+      issueButton = `
+        <button data-only="${Strings.toHexString(pending.borrower)}" style="display:none;" onclick="submitIssue(this)">Issue</button>
+      `;
+    }
     return `<li data-address="${Strings.toHexString(pending.loan)}">
       ${renderLoanDetails(pending, token)}
       <button>Comments: ${Strings.toString(pending.commentCount)}</button>
       <button data-toggle="invest-${Strings.toHexString(pending.loan)}">Invest</button>
       <button data-toggle="divest-${Strings.toHexString(pending.loan)}">Divest</button>
+      <button data-only="${Strings.toHexString(pending.borrower)}" style="display:none;" onclick="submitCancel(this)">Cancel</button>
+      ${issueButton}
+
       ${renderInvestForm(pending, token)}
       ${renderDivestForm(pending, token)}
     </li>`;
@@ -95,6 +105,7 @@ contract LwnedFrontendPending {
   function render() external view returns(bytes memory) {
     bytes memory pendingRendered;
     if(factory.pendingCount() > 0) {
+      // TODO pagination!
       ILwnedBrowser.LoanDetails[] memory pending = browser.pending(address(factory), 0, 100);
       if(pending.length == 0) {
         pendingRendered = `<p class="empty">No pending loan applications!</p>`;
@@ -115,6 +126,12 @@ contract LwnedFrontendPending {
           const result = await wallet();
           window.accounts = result.accounts;
           window.web3 = result.web3;
+
+          document.querySelectorAll('[data-only]').forEach(el => {
+            if(el.getAttribute('data-only').toLowerCase() === accounts[0].toLowerCase()) {
+              el.style.display = "";
+            }
+          });
 
           document.querySelectorAll('form .my-balance').forEach(async (span) => {
             form = span.closest('form');
@@ -203,6 +220,24 @@ contract LwnedFrontendPending {
             }, [
               amount
             ])
+          });
+          await loadPage();
+        }
+
+        async function submitCancel(el) {
+          await web3.eth.sendTransaction({
+            to: el.closest('li[data-address]').getAttribute('data-address'),
+            from: accounts[0],
+            data: web3.eth.abi.encodeFunctionSignature('loanCancel()')
+          });
+          await loadPage();
+        }
+
+        async function submitIssue(el) {
+          await web3.eth.sendTransaction({
+            to: el.closest('li[data-address]').getAttribute('data-address'),
+            from: accounts[0],
+            data: web3.eth.abi.encodeFunctionSignature('loanIssue()')
           });
           await loadPage();
         }

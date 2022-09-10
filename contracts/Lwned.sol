@@ -71,6 +71,7 @@ contract Loan is ERC20 {
   function invest(uint amount) external {
     require(block.timestamp < deadlineIssue);
     require(amount > 0);
+    require(status == Status.PENDING);
     emit InvestmentChanged(totalSupply, totalSupply + amount);
     _mint(msg.sender, amount);
     // Don't allow collecting more investment than requested
@@ -131,6 +132,7 @@ contract Loan is ERC20 {
     require(msg.sender == borrower);
     status = Status.CANCELED;
     emit LoanCanceled(block.timestamp);
+    factory.markAsCanceled();
     _refundCollateral();
   }
 
@@ -221,7 +223,12 @@ contract Lwned {
     require(pendingApplications.exists(msg.sender));
     pendingApplications.remove(msg.sender);
     activeLoans.insert(msg.sender);
+  }
 
+  // Invoked by the Loan contract internally
+  function markAsCanceled() external {
+    require(pendingApplications.exists(msg.sender));
+    pendingApplications.remove(msg.sender);
   }
 
   function countOf(address account) external view returns(uint) {
