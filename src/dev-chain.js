@@ -41,9 +41,15 @@ const contracts = {
     () => contracts.LwnedBrowser.instance.options.address,
     () => contracts.UserBadge.instance.options.address,
   ]},
+  LwnedFrontendActive: { constructorArgs: [
+    () => contracts.Lwned.instance.options.address,
+    () => contracts.LwnedBrowser.instance.options.address,
+    () => contracts.UserBadge.instance.options.address,
+  ]},
   LwnedFrontendIndex: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
     () => contracts.LwnedFrontendPending.instance.options.address,
+    () => contracts.LwnedFrontendActive.instance.options.address,
   ]},
 };
 

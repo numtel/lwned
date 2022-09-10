@@ -166,9 +166,6 @@ contract LwnedFrontendPending {
         document.querySelectorAll('span.timestamp').forEach(span => {
           span.innerHTML = new Date(span.innerHTML * 1000).toLocaleString();
         });
-        document.querySelectorAll('ul.pending>li').forEach(loan => {
-          
-        });
         document.querySelectorAll('[data-toggle]').forEach(toggler => {
           toggler.addEventListener('click', function() {
             const el = document.getElementById(toggler.getAttribute('data-toggle'));

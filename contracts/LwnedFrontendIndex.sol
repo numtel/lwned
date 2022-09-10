@@ -8,10 +8,12 @@ import "./Strings.sol";
 contract LwnedFrontendIndex {
   ILwned public factory;
   address public pendingPage;
+  address public activePage;
 
-  constructor(ILwned _factory, address _pendingPage) {
+  constructor(ILwned _factory, address _pendingPage, address _activePage) {
     factory = _factory;
     pendingPage = _pendingPage;
+    activePage = _activePage;
   }
 
   function tokenButton(string memory tokenAddress, string memory tokenSymbol) internal pure returns(bytes memory) {
@@ -32,7 +34,8 @@ contract LwnedFrontendIndex {
     return `
       <p>Pending loan count: ${Strings.toString(factory.pendingCount())}
         <a href="#${Strings.toHexString(pendingPage)}">View Pending...</a></p>
-      <p>Issued loan count: ${Strings.toString(factory.activeCount())}</p>
+      <p>Issued loan count: ${Strings.toString(factory.activeCount())}
+        <a href="#${Strings.toHexString(activePage)}">View Active...</a></p>
       <script>
         window.accounts = null;
         window.web3 = null;
