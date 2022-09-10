@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 interface ILwnedBrowser {
   struct LoanDetails {
+    address loan;
     address borrower;
     address token;
     uint8 status;

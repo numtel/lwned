@@ -6,6 +6,7 @@ import "./ILoan.sol";
 
 contract LwnedBrowser {
   struct LoanDetails {
+    address loan;
     address borrower;
     address token;
     uint8 status;
@@ -39,6 +40,7 @@ contract LwnedBrowser {
     for(uint i; i < fetchCount; i++) {
       ILoan loan = ILoan(factory.loansByBorrower(borrower, startIndex + i));
       out[i] = LoanDetails(
+        address(loan),
         borrower,
         loan.token(),
         loan.status(),
@@ -69,6 +71,7 @@ contract LwnedBrowser {
     for(uint i; i < fetchCount; i++) {
       ILoan loan = ILoan(factory.pendingAt(startIndex + i));
       out[i] = LoanDetails(
+        address(loan),
         loan.borrower(),
         loan.token(),
         loan.status(),
@@ -99,6 +102,7 @@ contract LwnedBrowser {
     for(uint i; i < fetchCount; i++) {
       ILoan loan = ILoan(factory.activeAt(startIndex + i));
       out[i] = LoanDetails(
+        address(loan),
         loan.borrower(),
         loan.token(),
         loan.status(),

@@ -53,4 +53,14 @@ contract UserBadge {
     }
     return `${out}</div>`;
   }
+  function renderScript() external pure returns (bytes memory) {
+    // TODO implement script for other user badge fields
+    return `
+      document.querySelectorAll('[data-country-code]').forEach(span => {
+        countryCodeInt = Number(span.getAttribute('data-country-code'));
+        span.innerHTML = String.fromCharCode(countryCodeInt >> 16)
+             + String.fromCharCode(countryCodeInt - ((countryCodeInt >> 16) << 16));
+      });
+    `;
+  }
 }
