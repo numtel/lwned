@@ -12,6 +12,7 @@ const GAS_AMOUNT = 20000000;
 const PROMPT = '> ';
 const SECONDS_PER_DAY = 60 * 60 * 24;
 const SECONDS_PER_YEAR = SECONDS_PER_DAY * 365;
+let lensProfileCount = 0;
 
 const currentTimestamp = async () => (await web3.eth.getBlock()).timestamp;
 
@@ -28,11 +29,17 @@ const web3 = new Web3(ganacheServer.provider);
 
 const contracts = {
   MockVerification: {},
+  MockLensHub: {},
   Lwned: {},
   LwnedBrowser: {},
+  UserBadge: { constructorArgs: [
+    () => contracts.MockVerification.instance.options.address,
+    () => contracts.MockLensHub.instance.options.address,
+  ]},
   LwnedFrontendPending: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
     () => contracts.LwnedBrowser.instance.options.address,
+    () => contracts.UserBadge.instance.options.address,
   ]},
   LwnedFrontendIndex: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
@@ -124,6 +131,28 @@ const commands = {
     await contracts.MockVerification.instance.methods.setStatus(
         address, expiration)
       .send({ from: accounts[0], gas: GAS_AMOUNT });
+  },
+  lensProfile: async function(address) {
+    if(arguments.length === 0) return console.log('Address required');
+    if(address.length !== 42) address = accounts[address];
+    if(!address) return console.log('Address required');
+    lensProfileCount++;
+    await contracts.MockLensHub.instance.methods.setProfile(lensProfileCount, [
+      lensProfileCount,
+      '0x0000000000000000000000000000000000000000',
+      '0x4808187aFFd96e1cf2f2311295fE42eeD35a5B0e',
+      'test' + lensProfileCount + '.lens',
+      'ipfs://QmY3VdC96iquoxaq6A33U1a8gfqb6wSsTdMfjMJ1ZsAKzk',
+      'ipfs://QmahfVqsx1uFmTS1DbrZhQVfUyjyHSsuzNCczV4PsdyFRJ'
+    ]).send({ from: accounts[0], gas: GAS_AMOUNT });
+    await contracts.MockLensHub.instance.methods.setDefaultProfile(address, lensProfileCount)
+      .send({ from: accounts[0], gas: GAS_AMOUNT });
+    console.log('Lens Profile Id:', lensProfileCount);
+  },
+  getLensProfile: async function(profileId) {
+    if(arguments.length === 0) return console.log('profileId required');
+    console.log(contracts.MockLensHub.instance.options.address, await contracts.UserBadge.instance.methods.render(accounts[0]).call());
+    console.log(await contracts.MockLensHub.instance.methods.getProfile(profileId).call());
   },
   expiration: async function(address) {
     if(arguments.length === 0) return console.log('Address required');

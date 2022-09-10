@@ -9,6 +9,7 @@ using AddressSet for AddressSet.Set;
 
 contract Loan is ERC20 {
   Lwned public factory;
+  // TODO store verification addressIdHash along with the loan for better tracking
   address public borrower;
   address public token;
   enum Status { PENDING, ACTIVE, REPAID, DEFAULTED, CANCELED }

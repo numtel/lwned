@@ -1,8 +1,10 @@
 #!/bin/bash
 mkdir -p trans
 cd contracts
-for i in *.sol
+FILES=$(find -type f -name '*.sol')
+for i in $FILES
 do
   echo "Rewriting $i..."
-  node ../src/rewriter.js < "$i" > "../trans/$i"
+  filename=$(basename -- "$i")
+  node ../src/rewriter.js < "$i" > "../trans/${filename}"
 done

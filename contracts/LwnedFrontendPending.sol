@@ -5,15 +5,19 @@ import "./ILwned.sol";
 import "./ILoan.sol";
 import "./ILwnedBrowser.sol";
 import "./IERC20.sol";
+import "./IUserBadge.sol";
 import "./Strings.sol";
+import "./utils.sol";
 
 contract LwnedFrontendPending {
   ILwned public factory;
   ILwnedBrowser public browser;
+  IUserBadge public userBadge;
 
-  constructor(ILwned _factory, ILwnedBrowser _browser) {
+  constructor(ILwned _factory, ILwnedBrowser _browser, IUserBadge _userBadge) {
     factory = _factory;
     browser = _browser;
+    userBadge = _userBadge;
   }
 
   function renderCollateral(ILwnedBrowser.LoanDetails memory pending) internal view returns(bytes memory) {
@@ -32,24 +36,13 @@ contract LwnedFrontendPending {
     return `<span data-decimals="${Strings.toString(token.decimals())}">${Strings.toString(amount)}</span> <a href="https://polygonscan.com/address/${Strings.toHexString(address(token))}">${token.symbol()}</a>`;
   }
 
-  function userInputFilter(string memory input) internal pure returns(bytes memory) {
-    bytes memory output = `${input}`;
-    // Keep the HTML safe but don't bother with &gt; or &lt; because that changes the length
-    for(uint i=0; i<output.length; i++) {
-      // Replace < with [
-      if(output[i] == 0x3c) output[i] = 0x5b;
-      // Replace > with ]
-      if(output[i] == 0x3e) output[i] = 0x5d;
-    }
-    return output;
-  }
 
   function renderLoan(ILwnedBrowser.LoanDetails memory pending) internal view returns(bytes memory) {
     IERC20 token = IERC20(pending.token);
     return `<li>
       <dl>
         <dt>Borrower</dt>
-        <dd><a href="#" data-replace-address="${Strings.toHexString(pending.borrower)}">Borrower</a></dd>
+        <dd>${userBadge.render(pending.borrower)}</dd>
         <dt>Loan Amount</dt>
         <dd>${renderToken(pending.amountToGive, token)} to raise by <span class="timestamp">${Strings.toString(pending.deadlineIssue)}</span></dd>
         <dt>Repayment Amount</dt>
@@ -57,7 +50,7 @@ contract LwnedFrontendPending {
         <dt>Collateral Offered</dt>
         <dd>${renderCollateral(pending)}</dd>
         <dt>Submission Statement</dt>
-        <dd>${userInputFilter(pending.text)}</dd>
+        <dd>${utils.userInputFilter(pending.text)}</dd>
       </dl>
       <button>Comments: ${Strings.toString(pending.commentCount)}</button>
       <button>Invest</button>

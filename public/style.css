@@ -1,6 +1,6 @@
 * { box-sizing:border-box;}
 
-body {background:#ddd; color:#222; font-family:sans-serif; min-height:100vh; display:flex;flex-direction:column;max-width:760px; margin:20px auto; padding: 20px;}
+body {background:#ddd; color:#222; font-family:sans-serif; display:flex;flex-direction:column;max-width:760px; margin:20px auto; padding: 20px;}
 @media (max-width:600px) { body { padding:20px 5px; } }
 a { color:#000; }
 h1 {  margin-bottom: 15px;}
