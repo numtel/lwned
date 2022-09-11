@@ -44,7 +44,7 @@ contract LwnedFrontendIndex {
           const result = await wallet();
           accounts = result.accounts;
           web3 = result.web3;
-          document.getElementById('new-loan').style.display = 'block';
+          document.getElementById('new-loan').style.display = '';
         }
         async function submitForm(form) {
           const tokenDecimals = form.querySelector('input[name="token"]+span').getAttribute('data-decimals');
@@ -130,8 +130,12 @@ contract LwnedFrontendIndex {
         }
         async function addCollateral(el) {
           const div = document.createElement('div');
-          div.innerHTML = '<div>Token: <input name="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span></span><div class="common">' + document.querySelector('.common').innerHTML + '</div></div><div>Amount: <input required></div>';
+          div.classList.toggle('collateral-item', true);
+          div.innerHTML = '<div>Token: <input name="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span></span><div class="common">' + document.querySelector('.common').innerHTML + '</div></div><div>Amount: <input required><div class="common"><button type="button" onclick="removeCollateral(this)">Remove</button></div>';
           el.parentNode.appendChild(div);
+        }
+        function removeCollateral(button) {
+          button.closest('.collateral').removeChild(button.closest('.collateral-item'))
         }
       </script>
       <button onclick="connect()">Start New Loan Application</button>
@@ -161,10 +165,16 @@ contract LwnedFrontendIndex {
           <dt>Submission Statement</dt>
           <dd><textarea name="text" style="width:100%;min-height:100px;"></textarea></dd>
         </dl>
+        <p><a href="https://polygonscan.com/address/${Strings.toHexString(address(factory))}">View Contract on Explorer</a></p>
         <button type="submit">Submit</button>
-        <a href="https://polygonscan.com/address/${Strings.toHexString(address(factory))}">View Contract on Explorer</a>
+        <button type="button" onclick="this.closest('form').style.display = 'none'">Cancel</button>
         </fieldset>
       </form>
+      <script>
+        document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+          if(event.target.nodeName === 'FORM') event.target.style.display = 'none';
+        }, true);
+      </script>
     `;
   }
 }

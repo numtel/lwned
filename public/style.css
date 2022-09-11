@@ -1,16 +1,19 @@
 * { box-sizing:border-box;}
 
-body {background:#ddd; color:#222; font-family:sans-serif; display:flex;flex-direction:column;max-width:760px; margin:20px auto; padding: 20px;}
+body {position:relative; background:#ddd; color:#222; font-family:sans-serif; display:flex;flex-direction:column;max-width:760px; margin:20px auto; padding: 20px;}
 @media (max-width:600px) { body { padding:20px 5px; } }
+#main.loading:after { content: "Loading..."; }
+#main.loading * {display:none;}
 a { color:#000; }
 h1 {  margin-bottom: 15px;}
 h1 a img { max-width:512px; width:100%; height:auto;}
-form { margin-top:50px;}
-fieldset {max-width:720px; padding:0; margin:auto 10px; align-self:center; background:#eee; color:#222; border:0; border-radius: 10px 10px 0 0; box-shadow: 0 0 30px #000; }
+form { position:absolute; display:flex; justify-content: center; top:0; left:0; min-height:100%; width:100%; }
+fieldset {max-width:720px; padding:0; margin:50px 10px; align-self:flex-start; background:#eee; color:#222; border:0; border-radius: 10px 10px 0 0; box-shadow: 0 0 30px #000; }
 @media (max-width:600px) { fieldset { margin: auto 3px; } }
 legend {background:linear-gradient(180deg, #dbdbdb 0%, #d6d6d6 100%); border-width:1px 0; border-style:solid; border-color:#e8e8e8 #000 #a7a7a7 #000; margin:0; padding: 14px; font-size: 100%; text-align:center; border-radius: 10px 10px 0 0; width:100%;float:left; margin-bottom:10px;}
 fieldset dl { padding: 10px; }
 fieldset dt { margin-top: 15px; }
+fieldset p { margin: 0 10px; }
 fieldset .collateral>div { padding: 8px; }
 fieldset .collateral>div:nth-child(odd) { background:#0001; }
 .common { display:inline-block; margin-left:5px; padding:5px; }

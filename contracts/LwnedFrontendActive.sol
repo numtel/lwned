@@ -122,11 +122,18 @@ contract LwnedFrontendActive {
         document.querySelectorAll('[data-toggle]').forEach(toggler => {
           toggler.addEventListener('click', function() {
             const el = document.getElementById(toggler.getAttribute('data-toggle'));
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+            el.querySelector('fieldset').style.marginTop = toggler.offsetTop;
           }, false);
         });
 
         ${userBadge.renderScript()}
+
+        document.querySelectorAll('form').forEach(form => {
+          form.addEventListener('click', function(event) {
+            if(event.target.nodeName === 'FORM') form.style.display = 'none';
+          }, true);
+        });
       </script>
     `;
   }

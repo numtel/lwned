@@ -43,8 +43,9 @@ contract LwnedFrontendPending {
         <dt>Amount <span class="my-balance"></span></dt>
         <dd><input required></dd>
         </dl>
+        <p><a href="https://polygonscan.com/address/${Strings.toHexString(pending.loan)}">View Loan Contract on Explorer</a></p>
         <button type="submit">Submit</button>
-        <a href="https://polygonscan.com/address/${Strings.toHexString(pending.loan)}">View Loan Contract on Explorer</a>
+        <button type="button" onclick="this.closest('form').style.display = 'none'">Cancel</button>
       </fieldset>
     </form>`;
   }
@@ -57,8 +58,9 @@ contract LwnedFrontendPending {
         <dt>Amount <span class="my-investment"></span></dt>
         <dd><input required></dd>
         </dl>
+        <p><a href="https://polygonscan.com/address/${Strings.toHexString(pending.loan)}">View Loan Contract on Explorer</a></p>
         <button type="submit">Submit</button>
-        <a href="https://polygonscan.com/address/${Strings.toHexString(pending.loan)}">View Loan Contract on Explorer</a>
+        <button type="button" onclick="this.closest('form').style.display = 'none'">Cancel</button>
       </fieldset>
     </form>`;
   }
@@ -179,7 +181,8 @@ contract LwnedFrontendPending {
         document.querySelectorAll('[data-toggle]').forEach(toggler => {
           toggler.addEventListener('click', function() {
             const el = document.getElementById(toggler.getAttribute('data-toggle'));
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+            el.querySelector('fieldset').style.marginTop = toggler.offsetTop;
           }, false);
         });
 
@@ -250,6 +253,12 @@ contract LwnedFrontendPending {
         }
 
         ${userBadge.renderScript()}
+
+        document.querySelectorAll('form').forEach(form => {
+          form.addEventListener('click', function(event) {
+            if(event.target.nodeName === 'FORM') form.style.display = 'none';
+          }, true);
+        });
       </script>
     `;
   }

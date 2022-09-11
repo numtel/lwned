@@ -10,10 +10,11 @@
 </head>
 <body>
 <h1><a href="https://newgeocities.com/webmaster/blog/lwned.html"><img src="logo.png" alt="Get Lwned!"></a></h1>
-<div>
+<div id="main">
 <script>
 const parent = document.currentScript.parentNode;
 async function loadPage() {
+  parent.classList.toggle('loading', true);
   const config = await configPromise;
   if(window.location.hash.match(/^#0x[a-fA-F0-9]{40}/)) {
     pageAddress = window.location.hash.slice(1,43);
@@ -23,7 +24,6 @@ async function loadPage() {
   const hashArgs = window.location.hash.split(',').slice(1);
 
   const web3 = await web3ReadOnly();
-  // TODO If no render function, render as a profile
   const page = web3.eth.abi.decodeParameter('string', await web3.eth.call({
     to: pageAddress,
     data: web3.eth.abi.encodeFunctionCall({
@@ -47,6 +47,7 @@ async function loadPage() {
     newScript.appendChild(document.createTextNode(oldScript.innerHTML));
     oldScript.parentNode.replaceChild(newScript, oldScript);
   });
+  parent.classList.toggle('loading', false);
 
 }
 window.onhashchange = loadPage;
