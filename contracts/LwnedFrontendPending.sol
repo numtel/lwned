@@ -113,9 +113,10 @@ contract LwnedFrontendPending {
 
   function render(uint start, uint count) public view returns(bytes memory) {
     bytes memory pendingRendered;
+    ILwnedBrowser.LoanDetails[] memory pending;
     if(factory.pendingCount() > start) {
       // TODO pagination!
-      ILwnedBrowser.LoanDetails[] memory pending = browser.pending(address(factory), start, count);
+      pending = browser.pending(address(factory), start, count);
       if(pending.length == 0) {
         pendingRendered = `<p class="empty">No pending loan applications!</p>`;
       } else {
@@ -128,7 +129,7 @@ contract LwnedFrontendPending {
     }
     return `
       <p><a href="#">Return to Index...</a></p>
-      <p>Pending Loans ${Strings.toString(start+1)}-${Strings.toString(start+count+1)} of ${Strings.toString(factory.pendingCount())}</p>
+      <p>Pending Loans ${Strings.toString(start+1)}-${Strings.toString(start+pending.length)} of ${Strings.toString(factory.pendingCount())}</p>
       ${pendingRendered}
       <script>
         (async function() {
