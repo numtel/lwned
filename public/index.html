@@ -30,8 +30,9 @@ async function loadPage() {
       name: 'render',
       type: 'function',
       inputs: hashArgs.map(arg => ({
-        // Only supports 2 types atm
-        type: String(arg).match(/^0x[a-fA-F0-9]{40}$/) ? 'address' : 'uint256',
+        // Only supports 3 types atm
+        type: String(arg).match(/^0x[a-fA-F0-9]{40}$/) ? 'address' :
+          String(arg).match(/^0x[a-fA-F0-9]{64}%/) ? 'bytes32' : 'uint256',
         name: 'something'
       }))
     }, hashArgs)

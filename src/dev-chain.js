@@ -30,26 +30,26 @@ const web3 = new Web3(ganacheServer.provider);
 const contracts = {
   MockVerification: {},
   MockLensHub: {},
-  Lwned: {},
+  Lwned: { constructorArgs: [
+    () => contracts.MockVerification.instance.options.address,
+  ]},
   LwnedBrowser: {},
   UserBadge: { constructorArgs: [
     () => contracts.MockVerification.instance.options.address,
     () => contracts.MockLensHub.instance.options.address,
   ]},
-  LwnedFrontendPending: { constructorArgs: [
+  ActiveLoan: {},
+  PendingLoan: {},
+  LwnedFrontendList: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
     () => contracts.LwnedBrowser.instance.options.address,
     () => contracts.UserBadge.instance.options.address,
-  ]},
-  LwnedFrontendActive: { constructorArgs: [
-    () => contracts.Lwned.instance.options.address,
-    () => contracts.LwnedBrowser.instance.options.address,
-    () => contracts.UserBadge.instance.options.address,
+    () => contracts.ActiveLoan.instance.options.address,
+    () => contracts.PendingLoan.instance.options.address,
   ]},
   LwnedFrontendIndex: { constructorArgs: [
     () => contracts.Lwned.instance.options.address,
-    () => contracts.LwnedFrontendPending.instance.options.address,
-    () => contracts.LwnedFrontendActive.instance.options.address,
+    () => contracts.LwnedFrontendList.instance.options.address,
   ]},
 };
 

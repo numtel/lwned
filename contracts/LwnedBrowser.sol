@@ -33,6 +33,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory) {
     uint itemCount = factory.countOfLender(lender);
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
@@ -66,6 +69,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory) {
     uint itemCount = factory.countOf(borrower);
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
@@ -99,6 +105,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory) {
     uint itemCount = factory.countOfIdHash(idHash);
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
@@ -131,6 +140,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory) {
     uint itemCount = factory.pendingCount();
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
@@ -163,6 +175,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory) {
     uint itemCount = factory.activeCount();
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
@@ -195,6 +210,9 @@ contract LwnedBrowser {
     uint fetchCount
   ) external view returns(Comment[] memory) {
     uint itemCount = loan.commentCount();
+    if(itemCount == 0) {
+      return new Comment[](0);
+    }
     require(startIndex < itemCount);
     if(startIndex + fetchCount >= itemCount) {
       fetchCount = itemCount - startIndex;
