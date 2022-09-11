@@ -33,7 +33,7 @@ contract UserBadge {
     `;
     if(verification.addressActive(account)) {
       out = `${out}
-        <span class="verified">Verified Passport</span>
+        <span class="verified" data-id-hash="${Strings.toHexString(uint256(verification.addressIdHash(account)))}">Verified Passport</span>
       `;
     }
     if(verification.isOver21(account)) {

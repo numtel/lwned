@@ -71,8 +71,12 @@ contract LwnedFrontendList {
     } else if(loanState == 1) {
       return renderList(`Active Loans`, browser.active(address(factory), start, count),
         start, factory.activeCount());
+    } else {
+      bytes32 idHash = bytes32(loanState);
+      return renderList(`Borrows by ID hash ${Strings.toHexString(uint256(idHash))}`,
+        browser.byBorrowerIdHash(address(factory), idHash, start, count),
+        start, factory.countOfIdHash(idHash));
     }
-    return ``;
   }
 
   function render(uint loanSide, address account, uint start, uint count) external view returns(bytes memory) {

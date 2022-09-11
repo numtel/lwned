@@ -34,6 +34,13 @@ contract LwnedFrontendIndex {
         <a href="#${Strings.toHexString(listPage)},0,0,100">View Pending...</a></p>
       <p>Issued loan count: ${Strings.toString(factory.activeCount())}
         <a href="#${Strings.toHexString(listPage)},1,0,100">View Active...</a></p>
+      <p class="query"><span>Loan query: <input id="query" name="loan_query"></span>
+        <div>
+          <button onclick="document.location.hash='#${Strings.toHexString(listPage)},0,' + document.getElementById('query').value + ',0,100'">Account as Borrower</button>
+          <button onclick="document.location.hash='#${Strings.toHexString(listPage)},' + document.getElementById('query').value + ',0,100'">ID Hash as Borrower</button>
+          <button onclick="document.location.hash='#${Strings.toHexString(listPage)},1,' + document.getElementById('query').value + ',0,100'">Account as Lender</button>
+        </div>
+      </p>
       <script>
         window.accounts = null;
         window.web3 = null;

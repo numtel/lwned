@@ -24,30 +24,34 @@ async function loadPage() {
   const hashArgs = window.location.hash.split(',').slice(1);
 
   const web3 = await web3ReadOnly();
-  const page = web3.eth.abi.decodeParameter('string', await web3.eth.call({
-    to: pageAddress,
-    data: web3.eth.abi.encodeFunctionCall({
-      name: 'render',
-      type: 'function',
-      inputs: hashArgs.map(arg => ({
-        // Only supports 3 types atm
-        type: String(arg).match(/^0x[a-fA-F0-9]{40}$/) ? 'address' :
-          String(arg).match(/^0x[a-fA-F0-9]{64}%/) ? 'bytes32' : 'uint256',
-        name: 'something'
-      }))
-    }, hashArgs)
-    }));
-  parent.innerHTML = page;
+  try {
+    const page = web3.eth.abi.decodeParameter('string', await web3.eth.call({
+      to: pageAddress,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'render',
+        type: 'function',
+        inputs: hashArgs.map(arg => ({
+          // Only supports 3 types atm
+          type: String(arg).match(/^0x[a-fA-F0-9]{40}$/) ? 'address' :
+            String(arg).match(/^0x[a-fA-F0-9]{64}%/) ? 'bytes32' : 'uint256',
+          name: 'something'
+        }))
+      }, hashArgs)
+      }));
+    parent.innerHTML = page;
 
-  // Scripts are not executed when inserted using innerHTML
-  // https://stackoverflow.com/a/47614491
-  Array.from(parent.querySelectorAll('script')).forEach(oldScript => {
-    const newScript = document.createElement('script');
-    Array.from(oldScript.attributes)
-      .forEach(attr => newScript.setAttribute(attr.name, attr.value));
-    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-    oldScript.parentNode.replaceChild(newScript, oldScript);
-  });
+    // Scripts are not executed when inserted using innerHTML
+    // https://stackoverflow.com/a/47614491
+    Array.from(parent.querySelectorAll('script')).forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes)
+        .forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+      oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+  } catch(error) {
+    alert(error.message || error);
+  }
   parent.classList.toggle('loading', false);
 
 }
