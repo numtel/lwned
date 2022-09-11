@@ -65,23 +65,27 @@ contract LwnedFrontendActive {
   }
 
   function render() external view returns(bytes memory) {
+    return render(0, 100);
+  }
+
+  function render(uint start, uint count) public view returns(bytes memory) {
     bytes memory activeRendered;
     if(factory.activeCount() > 0) {
       // TODO pagination!
-      ILwnedBrowser.LoanDetails[] memory active = browser.active(address(factory), 0, 100);
+      ILwnedBrowser.LoanDetails[] memory active = browser.active(address(factory), start, count);
       if(active.length == 0) {
         activeRendered = `<p class="empty">No active loan applications!</p>`;
       } else {
-        activeRendered = `<ul class="active">`;
+        activeRendered = `<ol class="active" start="${Strings.toString(start+1)}">`;
         for(uint i = 0; i < active.length; i++) {
           activeRendered = `${activeRendered}${renderLoan(active[i])}`;
         }
-        activeRendered = `${activeRendered}</ul>`;
+        activeRendered = `${activeRendered}</ol>`;
       }
     }
     return `
       <p><a href="#">Return to Index...</a></p>
-      <p>Active loan count: ${Strings.toString(factory.activeCount())}</p>
+      <p>Active Loans ${Strings.toString(start+1)}-${Strings.toString(start+count+1)} of ${Strings.toString(factory.activeCount())}</p>
       ${activeRendered}
       <script>
         (async function() {

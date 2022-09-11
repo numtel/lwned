@@ -84,15 +84,20 @@ contract LwnedFrontendPending {
     IERC20 token = IERC20(pending.token);
     bool principalMet = ILoan(pending.loan).totalSupply() == pending.amountToGive;
     bytes memory issueButton;
+    bytes memory investButton;
     if(principalMet) {
       issueButton = `
         <button data-only="${Strings.toHexString(pending.borrower)}" style="display:none;" onclick="submitIssue(this)">Issue</button>
+      `;
+    } else {
+      investButton = `
+        <button data-toggle="invest-${Strings.toHexString(pending.loan)}">Invest</button>
       `;
     }
     return `<li data-address="${Strings.toHexString(pending.loan)}">
       ${renderLoanDetails(pending, token)}
       <button>Comments: ${Strings.toString(pending.commentCount)}</button>
-      <button data-toggle="invest-${Strings.toHexString(pending.loan)}">Invest</button>
+      ${investButton}
       <button data-toggle="divest-${Strings.toHexString(pending.loan)}">Divest</button>
       <button data-only="${Strings.toHexString(pending.borrower)}" style="display:none;" onclick="submitCancel(this)">Cancel</button>
       ${issueButton}
@@ -103,23 +108,27 @@ contract LwnedFrontendPending {
   }
 
   function render() external view returns(bytes memory) {
+    return render(0, 100);
+  }
+
+  function render(uint start, uint count) public view returns(bytes memory) {
     bytes memory pendingRendered;
-    if(factory.pendingCount() > 0) {
+    if(factory.pendingCount() > start) {
       // TODO pagination!
-      ILwnedBrowser.LoanDetails[] memory pending = browser.pending(address(factory), 0, 100);
+      ILwnedBrowser.LoanDetails[] memory pending = browser.pending(address(factory), start, count);
       if(pending.length == 0) {
         pendingRendered = `<p class="empty">No pending loan applications!</p>`;
       } else {
-        pendingRendered = `<ul class="pending">`;
+        pendingRendered = `<ol class="pending" start="${Strings.toString(start+1)}">`;
         for(uint i = 0; i < pending.length; i++) {
           pendingRendered = `${pendingRendered}${renderLoan(pending[i])}`;
         }
-        pendingRendered = `${pendingRendered}</ul>`;
+        pendingRendered = `${pendingRendered}</ol>`;
       }
     }
     return `
       <p><a href="#">Return to Index...</a></p>
-      <p>Pending loan count: ${Strings.toString(factory.pendingCount())}</p>
+      <p>Pending Loans ${Strings.toString(start+1)}-${Strings.toString(start+count+1)} of ${Strings.toString(factory.pendingCount())}</p>
       ${pendingRendered}
       <script>
         (async function() {

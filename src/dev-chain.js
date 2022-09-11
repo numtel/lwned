@@ -14,7 +14,7 @@ const SECONDS_PER_DAY = 60 * 60 * 24;
 const SECONDS_PER_YEAR = SECONDS_PER_DAY * 365;
 let lensProfileCount = 0;
 
-const currentTimestamp = async () => (await web3.eth.getBlock()).timestamp;
+const currentTimestamp = async () => (await web3.eth.getBlock('latest')).timestamp;
 
 const ganacheServer = ganache.server({
   wallet: { mnemonic: devSeed.seed },
@@ -128,6 +128,78 @@ const commands = {
     ).send({ from: address, gas: GAS_AMOUNT });
     console.log('New loan at', result.events.NewApplication.returnValues.loan);
   },
+  fastIssue: async function(address) {
+    if(arguments.length === 0) return console.log('Address required');
+    if(address.length !== 42) address = accounts[address];
+    if(!address) return console.log('Address required');
+    const token = await commands.deployToken();
+    const oneToken = '10000000000000000';
+    await commands.mintToken(token, address, oneToken);
+    await commands.mintToken(token, address, oneToken);
+    await web3.eth.sendTransaction({
+      to: token,
+      from: address,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'approve', type: 'function',
+        inputs: [
+          { type: 'address', name:'spender'},
+          { type: 'uint256', name:'amount'},
+        ]
+      }, [
+        contracts.Lwned.instance.options.address,
+        oneToken
+      ])
+    });
+    console.log('Opening application...');
+    const result = await contracts.Lwned.instance.methods.newApplication(
+      token, oneToken, oneToken,
+      (await currentTimestamp()) + SECONDS_PER_DAY * 1,
+      (await currentTimestamp()) + SECONDS_PER_DAY * 3,
+      [ token ],
+      [ oneToken ],
+      'Test <em>loan</em> application'
+    ).send({ from: address, gas: GAS_AMOUNT });
+    console.log('Approving investment...');
+    await web3.eth.sendTransaction({
+      to: token,
+      from: address,
+      gas: GAS_AMOUNT,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'approve', type: 'function',
+        inputs: [
+          { type: 'address', name:'spender'},
+          { type: 'uint256', name:'amount'},
+        ]
+      }, [
+        result.events.NewApplication.returnValues.loan,
+        oneToken
+      ])
+    });
+    console.log('Investing...');
+    await web3.eth.sendTransaction({
+      to: result.events.NewApplication.returnValues.loan,
+      from: address,
+      gas: GAS_AMOUNT,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'invest', type: 'function',
+        inputs: [
+          { type: 'uint256', name:'amount'},
+        ]
+      }, [ oneToken ])
+    });
+    console.log('Issuing...');
+    await web3.eth.sendTransaction({
+      to: result.events.NewApplication.returnValues.loan,
+      from: address,
+      gas: GAS_AMOUNT,
+      data: web3.eth.abi.encodeFunctionCall({
+        name: 'loanIssue', type: 'function',
+        inputs: []
+      }, [])
+    });
+
+    console.log('New loan at', result.events.NewApplication.returnValues.loan);
+  },
   verify: async function(address, expiration) {
     if(arguments.length === 0) return console.log('Address required');
     if(address.length !== 42) address = accounts[address];
@@ -157,7 +229,6 @@ const commands = {
   },
   getLensProfile: async function(profileId) {
     if(arguments.length === 0) return console.log('profileId required');
-    console.log(contracts.MockLensHub.instance.options.address, await contracts.UserBadge.instance.methods.render(accounts[0]).call());
     console.log(await contracts.MockLensHub.instance.methods.getProfile(profileId).call());
   },
   expiration: async function(address) {
@@ -195,7 +266,11 @@ process.stdin.on('readable', async () => {
   while (null !== (chunk = process.stdin.read())) {
     const argv = chunk.toString('utf8').trim().split(' ');
     if(argv[0] in commands) {
-      await commands[argv[0]].apply(null, argv.slice(1));
+      try {
+        await commands[argv[0]].apply(null, argv.slice(1));
+      } catch(error) {
+        console.error(error);
+      }
     } else {
       console.log('Invalid command', argv[0]);
     }

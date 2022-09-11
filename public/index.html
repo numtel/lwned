@@ -15,17 +15,27 @@
 const parent = document.currentScript.parentNode;
 async function loadPage() {
   const config = await configPromise;
-  if(window.location.hash.match(/^#0x[a-fA-F0-9]{40}$/)) {
-    pageAddress = window.location.hash.slice(1);
+  if(window.location.hash.match(/^#0x[a-fA-F0-9]{40}/)) {
+    pageAddress = window.location.hash.slice(1,43);
   } else {
     pageAddress = config.contracts.LwnedFrontendIndex.address;
   }
+  const hashArgs = window.location.hash.split(',').slice(1);
+
   const web3 = await web3ReadOnly();
   // TODO If no render function, render as a profile
   const page = web3.eth.abi.decodeParameter('string', await web3.eth.call({
     to: pageAddress,
-    data: web3.eth.abi.encodeFunctionSignature('render()'),
-  }));
+    data: web3.eth.abi.encodeFunctionCall({
+      name: 'render',
+      type: 'function',
+      inputs: hashArgs.map(arg => ({
+        // Only supports 2 types atm
+        type: String(arg).match(/^0x[a-fA-F0-9]{40}$/) ? 'address' : 'uint256',
+        name: 'something'
+      }))
+    }, hashArgs)
+    }));
   parent.innerHTML = page;
 
   // Scripts are not executed when inserted using innerHTML
