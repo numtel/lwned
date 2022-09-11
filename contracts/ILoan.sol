@@ -6,6 +6,7 @@ import "./IERC20.sol";
 interface ILoan is IERC20 {
   function factory() external view returns(address);
   function borrower() external view returns(address);
+  function idHash() external view returns(bytes32);
   function token() external view returns(address);
   function status() external view returns(uint8);
   function amountToGive() external view returns(uint);

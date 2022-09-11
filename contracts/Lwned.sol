@@ -3,14 +3,15 @@ pragma solidity ^0.8.13;
 
 import "./ERC20.sol";
 import "./IERC20.sol";
+import "./IVerification.sol";
 import "./safeTransfer.sol";
 import "./AddressSet.sol";
 using AddressSet for AddressSet.Set;
 
 contract Loan is ERC20 {
   Lwned public factory;
-  // TODO store verification addressIdHash along with the loan for better tracking
   address public borrower;
+  bytes32 public idHash;
   address public token;
   enum Status { PENDING, ACTIVE, REPAID, DEFAULTED, CANCELED }
   Status public status;
@@ -43,6 +44,7 @@ contract Loan is ERC20 {
   constructor(
     Lwned _factory,
     address _borrower,
+    bytes32 _idHash,
     address _token,
     uint _toGive,
     uint _toRepay,
@@ -57,6 +59,7 @@ contract Loan is ERC20 {
     require(_toGive > 0);
     factory = _factory;
     borrower = _borrower;
+    idHash = _idHash;
     token = _token;
     decimals = IERC20(token).decimals();
     amountToGive = _toGive;
@@ -76,6 +79,7 @@ contract Loan is ERC20 {
     _mint(msg.sender, amount);
     // Don't allow collecting more investment than requested
     require(totalSupply <= amountToGive);
+    factory.markAsLender(msg.sender);
     safeTransfer.invokeFrom(token, msg.sender, address(this), amount);
   }
 
@@ -175,11 +179,20 @@ contract Loan is ERC20 {
 }
 
 contract Lwned {
+  IVerification public verifications;
+
   mapping(address => Loan[]) public loansByBorrower;
+  mapping(bytes32 => Loan[]) public loansByBorrowerIdHash;
+  mapping(address => Loan[]) public loansByLender;
+  mapping(address => mapping(address => bool)) public loansByLenderMap;
   AddressSet.Set pendingApplications;
   AddressSet.Set activeLoans;
 
   event NewApplication(address indexed borrower, address loan);
+
+  constructor(IVerification _verifications) {
+    verifications = _verifications;
+  }
 
   function newApplication(
     address _token,
@@ -191,9 +204,12 @@ contract Lwned {
     uint[] memory _collateralAmounts,
     string memory _text
   ) external {
+    bytes32 idHash = verifications.addressIdHash(msg.sender);
+
     Loan application = new Loan(
       this,
       msg.sender,
+      idHash,
       _token,
       _toGive,
       _toRepay,
@@ -216,6 +232,19 @@ contract Lwned {
     loansByBorrower[msg.sender].push(application);
     pendingApplications.insert(address(application));
     emit NewApplication(msg.sender, address(application));
+
+    if(uint256(idHash) > 0) {
+      loansByBorrowerIdHash[idHash].push(application);
+    }
+  }
+
+  // Invoked by the Loan contract internally
+  function markAsLender(address lender) external {
+    require(pendingApplications.exists(msg.sender));
+    if(loansByLenderMap[lender][msg.sender] == false) {
+      loansByLenderMap[lender][msg.sender] = true;
+      loansByLender[lender].push(Loan(msg.sender));
+    }
   }
 
   // Invoked by the Loan contract internally
@@ -233,6 +262,14 @@ contract Lwned {
 
   function countOf(address account) external view returns(uint) {
     return loansByBorrower[account].length;
+  }
+
+  function countOfIdHash(bytes32 idHash) external view returns(uint) {
+    return loansByBorrowerIdHash[idHash].length;
+  }
+
+  function countOfLender(address account) external view returns(uint) {
+    return loansByLender[account].length;
   }
 
   function pendingCount() external view returns(uint) {

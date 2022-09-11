@@ -8,6 +8,7 @@ contract LwnedBrowser {
   struct LoanDetails {
     address loan;
     address borrower;
+    bytes32 idHash;
     address token;
     uint8 status;
     uint amountToGive;
@@ -23,6 +24,39 @@ contract LwnedBrowser {
     address author;
     uint timestamp;
     string text;
+  }
+
+  function byLender(
+    ILwned factory,
+    address lender,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.countOfLender(lender);
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      ILoan loan = ILoan(factory.loansByLender(lender, startIndex + i));
+      out[i] = LoanDetails(
+        address(loan),
+        loan.borrower(),
+        loan.idHash(),
+        loan.token(),
+        loan.status(),
+        loan.amountToGive(),
+        loan.amountToRepay(),
+        loan.deadlineIssue(),
+        loan.deadlineRepay(),
+        loan.allCollateralTokens(),
+        loan.allCollateralAmounts(),
+        loan.commentCount(),
+        loan.text()
+      );
+    }
+    return out;
   }
 
   function byBorrower(
@@ -42,6 +76,40 @@ contract LwnedBrowser {
       out[i] = LoanDetails(
         address(loan),
         borrower,
+        loan.idHash(),
+        loan.token(),
+        loan.status(),
+        loan.amountToGive(),
+        loan.amountToRepay(),
+        loan.deadlineIssue(),
+        loan.deadlineRepay(),
+        loan.allCollateralTokens(),
+        loan.allCollateralAmounts(),
+        loan.commentCount(),
+        loan.text()
+      );
+    }
+    return out;
+  }
+
+  function byBorrowerIdHash(
+    ILwned factory,
+    bytes32 idHash,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.countOfIdHash(idHash);
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      ILoan loan = ILoan(factory.loansByBorrowerIdHash(idHash, startIndex + i));
+      out[i] = LoanDetails(
+        address(loan),
+        loan.borrower(),
+        loan.idHash(),
         loan.token(),
         loan.status(),
         loan.amountToGive(),
@@ -73,6 +141,7 @@ contract LwnedBrowser {
       out[i] = LoanDetails(
         address(loan),
         loan.borrower(),
+        loan.idHash(),
         loan.token(),
         loan.status(),
         loan.amountToGive(),
@@ -104,6 +173,7 @@ contract LwnedBrowser {
       out[i] = LoanDetails(
         address(loan),
         loan.borrower(),
+        loan.idHash(),
         loan.token(),
         loan.status(),
         loan.amountToGive(),

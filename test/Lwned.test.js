@@ -3,7 +3,8 @@ const assert = require('assert');
 exports.createLoan = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
   const token = await deployContract(accounts[0], 'MockERC20');
 
   const now = (await web3.eth.getBlock('latest')).timestamp;
@@ -82,7 +83,8 @@ exports.createLoan = async function({
 exports.loanCanceled = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
   const token = await deployContract(accounts[0], 'MockERC20');
 
   const now = (await web3.eth.getBlock('latest')).timestamp;
@@ -134,7 +136,8 @@ exports.loanCanceled = async function({
 exports.loanDefaulted = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
   const token = await deployContract(accounts[0], 'MockERC20');
 
   const now = (await web3.eth.getBlock('latest')).timestamp;
@@ -182,7 +185,8 @@ exports.loanDefaulted = async function({
 exports.multipleCollateralAndInvestorDefault = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
   const token = await deployContract(accounts[0], 'MockERC20');
   const token2 = await deployContract(accounts[0], 'MockERC20');
 
@@ -240,7 +244,8 @@ exports.multipleCollateralAndInvestorDefault = async function({
 exports.multipleCollateralAndInvestorRepay = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
   const token = await deployContract(accounts[0], 'MockERC20');
   const token2 = await deployContract(accounts[0], 'MockERC20');
 
@@ -292,5 +297,56 @@ exports.multipleCollateralAndInvestorRepay = async function({
   assert.strictEqual(Number(await token.methods.balanceOf(accounts[1]).call()), toRepay * give1);
   await loan.sendFrom(accounts[2]).divest(toGive * give2);
   assert.strictEqual(Number(await token.methods.balanceOf(accounts[2]).call()), toRepay * give2);
+
+}
+
+exports.investMultipleTimes = async function({
+  web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
+}) {
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  await verify.sendFrom(accounts[0]).setStatus(accounts[0], 0);
+  const idHash = await verify.methods.addressIdHash(accounts[0]).call();
+
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
+  const token = await deployContract(accounts[0], 'MockERC20');
+
+  const now = (await web3.eth.getBlock('latest')).timestamp;
+  const deadlineIssue = 30;
+  const deadlineRepay = 300;
+  const toGive = 1000000;
+  const toRepay  = 1090000;
+  const interest = toRepay - toGive;
+  const collateral = 500000;
+  const submissionStatement = "heyo gimme some skrilla";
+
+  await token.sendFrom(accounts[0]).mint(accounts[0], collateral + interest);
+  await token.sendFrom(accounts[0]).approve(factory.options.address, collateral);
+
+  // Create loan
+  const result = await factory.sendFrom(accounts[0]).newApplication(
+    token.options.address,
+    toGive,
+    toRepay,
+    now + deadlineIssue,
+    now + deadlineIssue + deadlineRepay,
+    [token.options.address],
+    [collateral],
+    submissionStatement
+  );
+  const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
+  assert.strictEqual(await factory.methods.countOfIdHash(idHash).call(), '1');
+  assert.strictEqual(await factory.methods.loansByBorrowerIdHash(idHash, 0).call(), loan.options.address);
+
+  // Invest and divest from the loan
+  const give1 = 0.25, give2 = 1 - give1;
+  await token.sendFrom(accounts[1]).mint(accounts[1], toGive);
+  await token.sendFrom(accounts[1]).approve(loan.options.address, toGive);
+  await loan.sendFrom(accounts[1]).invest(toGive * give1);
+  await loan.sendFrom(accounts[1]).invest(toGive * give2);
+
+  await loan.sendFrom(accounts[0]).loanIssue();
+
+  assert.strictEqual(await factory.methods.countOfLender(accounts[1]).call(), '1');
+  assert.strictEqual(await factory.methods.loansByLender(accounts[1], 0).call(), loan.options.address);
 
 }

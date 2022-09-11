@@ -3,6 +3,9 @@ pragma solidity ^0.8.13;
 
 interface ILwned {
   function loansByBorrower(address account, uint index) external view returns(address);
+  function loansByBorrowerIdHash(bytes32 idHash, uint index) external view returns(address);
+  function loansByLender(address account, uint index) external view returns(address);
+  function loansByLenderMap(address account, address loan) external view returns(bool);
 
   event NewApplication(address indexed borrower, address loan);
 
@@ -18,6 +21,8 @@ interface ILwned {
   ) external;
 
   function countOf(address account) external view returns(uint);
+  function countOfIdHash(bytes32 idHash) external view returns(uint);
+  function countOfLender(address account) external view returns(uint);
   function pendingCount() external view returns(uint);
   function pendingAt(uint index) external view returns(address);
   function activeCount() external view returns(uint);

@@ -5,6 +5,7 @@ interface ILwnedBrowser {
   struct LoanDetails {
     address loan;
     address borrower;
+    bytes32 idHash;
     address token;
     uint8 status;
     uint amountToGive;
@@ -22,9 +23,23 @@ interface ILwnedBrowser {
     string text;
   }
 
+  function byLender(
+    address factory,
+    address lender,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory);
+
   function byBorrower(
     address factory,
     address borrower,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory);
+
+  function byBorrowerIdHash(
+    address factory,
+    bytes32 idHash,
     uint startIndex,
     uint fetchCount
   ) external view returns(LoanDetails[] memory);

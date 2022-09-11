@@ -12,10 +12,11 @@ exports.placesValuesInsideTemplates = async function({
 exports.index = async function({
   web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
 }) {
-  const factory = await deployContract(accounts[0], 'Lwned');
-  const frontend = await deployContract(accounts[0], 'LwnedFrontend',
-    factory.options.address);
-  const out = decodeAscii(await frontend.methods.index().call());
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
+  const frontend = await deployContract(accounts[0], 'LwnedFrontendIndex',
+    factory.options.address, BURN_ACCOUNT, BURN_ACCOUNT);
+  const out = decodeAscii(await frontend.methods.render().call());
   assert.notStrictEqual(out.indexOf('Pending loan count: 0'), -1);
 };
 
