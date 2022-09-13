@@ -73,7 +73,7 @@ export async function wallet() {
       else resolve(accounts);
     });
   });
-  return {web3, accounts, config};
+  return {web3, web3Modal, accounts, config};
 }
 
 export function decodeAscii(input) {

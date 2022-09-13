@@ -3,4 +3,4 @@ ol.loans {}
 .loan>span, .loan>a {display:block;}
 
 .status-badge { float:left; padding: 0 5px; border-radius: 4px; margin-right: 5px; }
-.status-badge.Pending {background:#d1e7dd;}
+.status-badge.Pending {background:#d1e7dd99;}
