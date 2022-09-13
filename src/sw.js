@@ -29,6 +29,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(loader(event.request));
 });
 
+const currentTimestamp = async () => (await web3.eth.getBlock('latest')).timestamp;
+
 async function loader(request) {
   config = await (await fetch('/config.json')).json();
   if(!request.url.startsWith(config.root)) return fetch(request);
@@ -98,7 +100,7 @@ async function loader(request) {
           </select>
           <label><span>Query:</span>
           <input name="q" value="${htmlEscape(url.searchParams.get('q') || '')}">
-          </span>
+          </label>
           <label><span>Start:</span>
           <input name="start" value="${htmlEscape(url.searchParams.get('start') || '0')}">
           </label>
@@ -124,11 +126,12 @@ async function loader(request) {
     const total = await lwned.methods[curView.count](...countArgs).call()
     const result = await browser.methods[method](...args).call();
     const tokens = await tokenData(result.map(loan => loan.collateralTokens.concat(loan.token)).flat());
+    const now = await currentTimestamp();
     const invested = [];
     for(let loan of result) {
       invested.push(await totalSupply(loan.loan));
     }
-    const output = htmlHeader() + viewForm + loanTable(result, tokens, invested, start, total);
+    const output = htmlHeader() + viewForm + loanTable(result, tokens, invested, start, total, now);
     return new Response(output, {
       headers: { 'Content-Type': 'text/html' }
     });
@@ -141,53 +144,39 @@ async function loader(request) {
 
 async function loanDetails(loan) {
   const tokens = await tokenData(loan.collateralTokens.concat(loan.token));
-    const invested = await totalSupply(loan.loan);
+  const invested = await totalSupply(loan.loan);
+  const now = await currentTimestamp();
   return `
-    <dl>
-      <dt>Borrower</dt>
-      <dd><a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></dd>
-      <dt>Status</dt>
-      <dd>${states[loan.status]}</dd>
-      <dt>Loan Amount</dt>
-      <dd>${tokens(loan.token, loan.amountToGive)} total, ${tokens(loan.token, invested)} raised <span class="my-investment"></span></dd>
-      <dt>Repayment Amount</dt>
-      <dd>${tokens(loan.token, loan.amountToRepay)}</span></dd>
-      <dt>Collateral Offered</dt>
-      <dd>${loan.collateralTokens.map((collateralToken, index) => 
-            tokens(collateralToken, loan.collateralAmounts[index])).join(', ')}</dd>
-      <dt>Submission Statement</dt>
-      <dd>${userInput(loan.text)}</dd>
-    </dl>
+    <div class="loan">
+      ${loanSpec(loan, tokens, invested, now)}
+    </div>
+    <div class="loan-text">${userInput(loan.text)}</div>
     <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>
   `;
 }
 
-function loanTable(data, tokens, invested, start, total) {
+function loanSpec(loan, tokens, invested, now) {
   return `
-    <table>
-    <thead><tr>
-      <th>${start+1}-${start+data.length} of ${total}</th>
-      <th>Status</th>
-      <th>Borrower</th>
-      <th>Loan Amount</th>
-      <th>Issuance Deadline</th>
-      <th>Repayment Deadline</th>
-      <th>Collateral</th>
-    </tr></thead>
-    <tbody>
+    <span class="status-badge ${states[loan.status]}">${states[loan.status]}</span>
+    <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
+    <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></span>
+    <span class="amount">${loan.status === '0' ? `Raised ${tokens(loan.token, invested, true)} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() / 100 - 100}%</span>
+    ${loan.status !== '0' ? '' : `
+    <span class="deadline-issue">Issue by ${new Date(loan.deadlineIssue * 1000).toLocaleString()} (${loan.deadlineIssue > now ? remaining(loan.deadlineIssue - now) : 'Deadline Passed'})</span>`}
+    <span class="deadline-repay">Repay by ${new Date(loan.deadlineRepay * 1000).toLocaleString()} (${loan.deadlineRepay > now ? remaining(loan.deadlineRepay - now) : 'Deadline Passed'})</span>
+    <span class="collateral">Collateral: ${loan.collateralTokens.map((collateralToken, index) => 
+      tokens(collateralToken, loan.collateralAmounts[index])).join(', ')}</span>
+  `;
+}
+
+function loanTable(data, tokens, invested, start, total, now) {
+  return `
+    <p class="paging">${start+1}-${start+data.length} of ${total}</p>
+    <ol class="loans" start="${start+1}">
       ${data.map((loan, index) => `
-        <tr>
-          <td>${start+index}. <a title="Loan Details" href="/loan/${loan.loan}">${ellipseAddress(loan.loan)}</a></td>
-          <td>${states[loan.status]}</td>
-          <td><a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></td>
-          <td>${loan.status === '0' ? `Raised ${tokens(loan.token, invested[index])} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() / 100 - 100}%</td>
-          <td>${new Date(loan.deadlineIssue * 1000).toLocaleString()}</td>
-          <td>${new Date(loan.deadlineRepay * 1000).toLocaleString()}</td>
-          <td>${loan.collateralTokens.map((collateralToken, index) => 
-            tokens(collateralToken, loan.collateralAmounts[index])).join(', ')}</td>
-        </tr>
+        <li class="loan">${loanSpec(loan, tokens, invested[index], now)}</li>
       `).join('')}
-    </tbody>
+    </ol>
 
   `;
 }
@@ -226,10 +215,10 @@ async function tokenData(tokenAddresses) {
       symbol: await token.methods.symbol().call(),
     };
   }
-  return function displayToken(tokenAddress, amount) {
+  return function displayToken(tokenAddress, amount, skipSymbol) {
     return (typeof amount !== 'undefined' ?
         applyDecimals(amount, out[tokenAddress].decimals) + ' ' : '') +
-      `<a title="View Token on Explorer" href="${explorer(tokenAddress)}">${out[tokenAddress].symbol}</a>`;
+      (skipSymbol ? '' : `<a title="View Token on Explorer" href="${explorer(tokenAddress)}">${out[tokenAddress].symbol}</a>`);
   };
 }
 

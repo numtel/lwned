@@ -184,6 +184,7 @@ contract Lwned {
   mapping(bytes32 => Loan[]) public loansByBorrowerIdHash;
   mapping(address => Loan[]) public loansByLender;
   mapping(address => mapping(address => bool)) public loansByLenderMap;
+  // TODO views with only loans from accounts with id hash?
   AddressSet.Set pendingApplications;
   AddressSet.Set activeLoans;
 
@@ -204,6 +205,7 @@ contract Lwned {
     string memory _text,
     string memory _name
   ) external {
+    require(bytes(_name).length > 4 && bytes(_name).length < 161);
     bytes32 idHash = verifications.addressIdHash(msg.sender);
 
     Loan application = new Loan(
@@ -211,6 +213,7 @@ contract Lwned {
       msg.sender,
       idHash,
       _token,
+      // Array defeats stack too deep error
       [_toGive,
       _toRepay,
       _deadlineIssue,

@@ -107,7 +107,8 @@ const commands = {
       (await currentTimestamp()) + SECONDS_PER_DAY * 3,
       [ token ],
       [ oneToken ],
-      'Test <em>loan</em> application'
+      'Test <em>loan</em> application, long description',
+      'Test loan',
     ).send({ from: address, gas: GAS_AMOUNT });
     console.log('New loan at', result.events.NewApplication.returnValues.loan);
   },
@@ -117,6 +118,7 @@ const commands = {
     if(!address) return console.log('Address required');
     const token = await commands.deployToken();
     const oneToken = '10000000000000000';
+    const onePointOneToken = '11000000000000000';
     await commands.mintToken(token, address, oneToken);
     await commands.mintToken(token, address, oneToken);
     await web3.eth.sendTransaction({
@@ -135,12 +137,13 @@ const commands = {
     });
     console.log('Opening application...');
     const result = await contracts.Lwned.instance.methods.newApplication(
-      token, oneToken, oneToken,
+      token, oneToken, onePointOneToken,
       (await currentTimestamp()) + SECONDS_PER_DAY * 1,
       (await currentTimestamp()) + SECONDS_PER_DAY * 3,
       [ token ],
       [ oneToken ],
-      'Test <em>loan</em> application'
+      'Test <em>loan</em> application, super long description',
+      'Test Issued loan'
     ).send({ from: address, gas: GAS_AMOUNT });
     console.log('Approving investment...');
     await web3.eth.sendTransaction({
