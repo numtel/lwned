@@ -19,11 +19,40 @@ contract LwnedBrowser {
     uint[] collateralAmounts;
     uint commentCount;
     string text;
+    string name;
   }
   struct Comment {
     address author;
     uint timestamp;
     string text;
+  }
+
+  function single(address loanAddress) public view returns(LoanDetails memory) {
+    ILoan loan = ILoan(loanAddress);
+    return LoanDetails(
+      address(loan),
+      loan.borrower(),
+      loan.idHash(),
+      loan.token(),
+      loan.status(),
+      loan.amountToGive(),
+      loan.amountToRepay(),
+      loan.deadlineIssue(),
+      loan.deadlineRepay(),
+      loan.allCollateralTokens(),
+      loan.allCollateralAmounts(),
+      loan.commentCount(),
+      loan.text(),
+      loan.name()
+    );
+  }
+
+  function many(address[] memory loanAddress) external view returns(LoanDetails[] memory) {
+    LoanDetails[] memory out = new LoanDetails[](loanAddress.length);
+    for(uint i; i < loanAddress.length; i++) {
+      out[i] = single(loanAddress[i]);
+    }
+    return out;
   }
 
   function byLender(
@@ -56,7 +85,8 @@ contract LwnedBrowser {
         loan.allCollateralTokens(),
         loan.allCollateralAmounts(),
         loan.commentCount(),
-        loan.text()
+        loan.text(),
+        loan.name()
       );
     }
     return out;
@@ -92,7 +122,8 @@ contract LwnedBrowser {
         loan.allCollateralTokens(),
         loan.allCollateralAmounts(),
         loan.commentCount(),
-        loan.text()
+        loan.text(),
+        loan.name()
       );
     }
     return out;
@@ -128,7 +159,8 @@ contract LwnedBrowser {
         loan.allCollateralTokens(),
         loan.allCollateralAmounts(),
         loan.commentCount(),
-        loan.text()
+        loan.text(),
+        loan.name()
       );
     }
     return out;
@@ -163,7 +195,8 @@ contract LwnedBrowser {
         loan.allCollateralTokens(),
         loan.allCollateralAmounts(),
         loan.commentCount(),
-        loan.text()
+        loan.text(),
+        loan.name()
       );
     }
     return out;
@@ -198,7 +231,8 @@ contract LwnedBrowser {
         loan.allCollateralTokens(),
         loan.allCollateralAmounts(),
         loan.commentCount(),
-        loan.text()
+        loan.text(),
+        loan.name()
       );
     }
     return out;

@@ -5,15 +5,17 @@
   "scripts": {
     "test": "node test/index.js",
     "todo": "bash -c \"grep -rn 'TODO' --exclude-dir={node_modules,build,trans} --exclude={*.min*,*.swp,package.json,solc} *\"",
-    "dev-chain": "node src/dev-chain.js",
-    "build-dev": "./src/rewriteAll.sh && ./solc --bin --abi --overwrite -o build trans/*.sol",
+    "dev": "lite-server",
+    "dev-chain": "node utils/dev-chain.js",
+    "build-dev": "./solc --bin --abi --overwrite -o build contracts/*.sol",
     "build-test": "./solc --bin --abi --overwrite -o build test/contracts/*.sol",
-    "build-prod": "./src/rewriteAll.sh && ./solc --bin --abi --overwrite -o build --optimize contracts/*.sol"
+    "build-prod": "./solc --bin --abi --overwrite -o build --optimize contracts/*.sol"
   },
   "author": "numtel <ben@latenightsketches.com>",
   "license": "MIT",
   "devDependencies": {
     "ganache": "^7.4.1",
+    "lite-server": "^2.6.1",
     "web3": "^1.7.5"
   }
 }

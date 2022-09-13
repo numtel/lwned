@@ -22,6 +22,7 @@ contract Loan is ERC20 {
   address[] public collateralTokens;
   uint[] public collateralAmounts;
   string public text;
+  string public name;
 
   struct Comment {
     address author;
@@ -37,7 +38,6 @@ contract Loan is ERC20 {
   event LoanDefaulted(uint timestamp);
   event LoanCanceled(uint timestamp);
 
-  string public name = "Lwned Lender Receipt";
   string public symbol = "LWNED";
   uint8 public decimals;
 
@@ -46,29 +46,28 @@ contract Loan is ERC20 {
     address _borrower,
     bytes32 _idHash,
     address _token,
-    uint _toGive,
-    uint _toRepay,
-    uint _deadlineIssue,
-    uint _deadlineRepay,
+    uint[4] memory _settings,
     address[] memory _collateralTokens,
     uint[] memory _collateralAmounts,
-    string memory _text
+    string memory _text,
+    string memory _name
   ) {
-    require(_deadlineIssue > block.timestamp);
-    require(_deadlineRepay > _deadlineIssue);
-    require(_toGive > 0);
     factory = _factory;
     borrower = _borrower;
     idHash = _idHash;
     token = _token;
     decimals = IERC20(token).decimals();
-    amountToGive = _toGive;
-    amountToRepay = _toRepay;
-    deadlineIssue = _deadlineIssue;
-    deadlineRepay = _deadlineRepay;
+    amountToGive = _settings[0];
+    amountToRepay = _settings[1];
+    deadlineIssue = _settings[2];
+    deadlineRepay = _settings[3];
     collateralTokens = _collateralTokens;
     collateralAmounts = _collateralAmounts;
     text = _text;
+    name = _name;
+    require(deadlineIssue > block.timestamp);
+    require(deadlineRepay > deadlineIssue);
+    require(amountToGive > 0);
   }
 
   function invest(uint amount) external {
@@ -202,7 +201,8 @@ contract Lwned {
     uint _deadlineRepay,
     address[] memory _collateralTokens,
     uint[] memory _collateralAmounts,
-    string memory _text
+    string memory _text,
+    string memory _name
   ) external {
     bytes32 idHash = verifications.addressIdHash(msg.sender);
 
@@ -211,13 +211,14 @@ contract Lwned {
       msg.sender,
       idHash,
       _token,
-      _toGive,
+      [_toGive,
       _toRepay,
       _deadlineIssue,
-      _deadlineRepay,
+      _deadlineRepay],
       _collateralTokens,
       _collateralAmounts,
-      _text
+      _text,
+      _name
     );
 
     // Transfer collateral to contract from borrower

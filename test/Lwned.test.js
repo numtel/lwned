@@ -28,7 +28,7 @@ exports.createLoan = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address],
     [collateral],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
 
   assert.strictEqual(result.events.NewApplication.returnValues.borrower, accounts[0]);
@@ -108,7 +108,7 @@ exports.loanCanceled = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address],
     [collateral],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
 
@@ -161,7 +161,7 @@ exports.loanDefaulted = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address],
     [collateral],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
 
@@ -214,7 +214,7 @@ exports.multipleCollateralAndInvestorDefault = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address, token2.options.address],
     [collateral, collateral2],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
 
@@ -273,7 +273,7 @@ exports.multipleCollateralAndInvestorRepay = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address, token2.options.address],
     [collateral, collateral2],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
 
@@ -331,7 +331,7 @@ exports.investMultipleTimes = async function({
     now + deadlineIssue + deadlineRepay,
     [token.options.address],
     [collateral],
-    submissionStatement
+    submissionStatement, 'Loan Name'
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
   assert.strictEqual(await factory.methods.countOfIdHash(idHash).call(), '1');

@@ -17,7 +17,8 @@ interface ILwned {
     uint _deadlineRepay,
     address[] memory _collateralTokens,
     uint[] memory _collateralAmounts,
-    string memory _text
+    string memory _text,
+    string memory _name
   ) external;
 
   function countOf(address account) external view returns(uint);

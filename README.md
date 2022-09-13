@@ -3,13 +3,7 @@
 
 "Need cash? Get Lwned!"
 
-Lending marketplace written in Solidity...all the way
-
-## Template strings in Solidity
-
-Javascript got template strings, why shouldn't Solidity? Now it does and we can use it to write unstoppable frontends!
-
-This repository uses a [short script](src/rewriter.js) to convert backtick strings into `abi.encodePacked()` calls.
+Lending marketplace
 
 ## Installation
 
@@ -32,6 +26,9 @@ $ chmod +x solc
 $ npm run build-test
 # To transpile and build contracts/*.sol (everything else)
 $ npm run build-dev
+
+# Start http server for public directory
+$ npm run dev
 
 # Start ganache local chain on port 8545
 # Accounts will be generated from seed in dev-seed.json

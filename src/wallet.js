@@ -1,13 +1,13 @@
 
-const configPromise = (async () => await (await fetch('/config.json')).json())();
+export const configPromise = (async () => await (await fetch('/config.json')).json())();
 
 
-async function web3ReadOnly() {
+export async function web3ReadOnly() {
   const config = await configPromise;
   return new Web3(config.rpc);
 }
 
-async function wallet() {
+export async function wallet() {
   const config = await configPromise;
   const web3Modal = new Web3Modal.default({
     cacheProvider: true,
@@ -76,7 +76,7 @@ async function wallet() {
   return {web3, accounts, config};
 }
 
-function decodeAscii(input) {
+export function decodeAscii(input) {
   let out = '';
   for(let i = 0; i<input.length; i+=2) {
     out += String.fromCharCode(parseInt(input.slice(i, i+2), 16));
@@ -85,7 +85,7 @@ function decodeAscii(input) {
 }
 
 // Turn 1230000 into 1.23
-function applyDecimals(input, decimals) {
+export function applyDecimals(input, decimals) {
   decimals = Number(decimals);
   input = String(input);
   if(input === '0') return input;
@@ -104,7 +104,7 @@ function applyDecimals(input, decimals) {
 }
 
 // Turn 1.23 into 1230000
-function reverseDecimals(input, decimals) {
+export function reverseDecimals(input, decimals) {
   decimals = Number(decimals);
   input = String(input);
   if(input === '0') return input;
@@ -140,11 +140,11 @@ function decimalSeparator() {
   return n.toLocaleString().substring(1, 2);
 }
 
-function ellipseAddress(address) {
+export function ellipseAddress(address) {
   return address.slice(0, 6) + '...' + address.slice(-4);
 }
 
-function remaining(seconds) {
+export function remaining(seconds) {
   const units = [
     { value: 1, unit: 'second' },
     { value: 60, unit: 'minute' },
@@ -163,10 +163,26 @@ function remaining(seconds) {
   return out.join(', ');
 }
 
-const ZERO_ACCOUNT = '0x0000000000000000000000000000000000000000';
+export const ZERO_ACCOUNT = '0x0000000000000000000000000000000000000000';
 
-function delay(ms) {
+export function delay(ms) {
   return new Promise(resolve => {
     setTimeout(() => resolve(), ms);
   });
+}
+
+export function explorer(address) {
+  return window.config.blockExplorer + '/address/' + address;
+}
+
+export function isAddress(address) {
+  return typeof address === 'string' && address.match(/^0x[a-f0-9]{40}$/i);
+}
+
+export function isBytes32(value) {
+  return typeof value === 'string' && value.match(/^0x[a-f0-9]{64}$/i);
+}
+
+export function isFunSig(value) {
+  return typeof value === 'string' && value.match(/^0x[a-f0-9]{8}$/i);
 }

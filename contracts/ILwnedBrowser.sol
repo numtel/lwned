@@ -16,12 +16,15 @@ interface ILwnedBrowser {
     uint[] collateralAmounts;
     uint commentCount;
     string text;
+    string name;
   }
   struct Comment {
     address author;
     uint timestamp;
     string text;
   }
+
+  function single(address loanAddress) external view returns(LoanDetails memory);
 
   function byLender(
     address factory,

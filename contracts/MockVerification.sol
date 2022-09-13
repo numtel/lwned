@@ -12,7 +12,7 @@ contract MockVerification {
     expirations[account] = expiration;
   }
 
-  function addressActive(address toCheck) external view returns (bool) {
+  function addressActive(address toCheck) public view returns (bool) {
     return expirations[toCheck] > block.timestamp;
   }
 
@@ -21,6 +21,7 @@ contract MockVerification {
   }
 
   function addressIdHash(address toCheck) external view returns(bytes32) {
+    if(!addressActive(toCheck)) return 0;
     return keccak256(abi.encode(toCheck, expirations[toCheck]));
   }
 

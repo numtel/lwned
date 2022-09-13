@@ -1,7 +1,6 @@
 const fs = require('fs');
 const Web3 = require('web3');
 const ganache = require('ganache');
-const HTMLServer = require('./HTMLServer');
 
 const devSeed = require('../dev-seed.json');
 
@@ -34,23 +33,6 @@ const contracts = {
     () => contracts.MockVerification.instance.options.address,
   ]},
   LwnedBrowser: {},
-  UserBadge: { constructorArgs: [
-    () => contracts.MockVerification.instance.options.address,
-    () => contracts.MockLensHub.instance.options.address,
-  ]},
-  ActiveLoan: {},
-  PendingLoan: {},
-  LwnedFrontendList: { constructorArgs: [
-    () => contracts.Lwned.instance.options.address,
-    () => contracts.LwnedBrowser.instance.options.address,
-    () => contracts.UserBadge.instance.options.address,
-    () => contracts.ActiveLoan.instance.options.address,
-    () => contracts.PendingLoan.instance.options.address,
-  ]},
-  LwnedFrontendIndex: { constructorArgs: [
-    () => contracts.Lwned.instance.options.address,
-    () => contracts.LwnedFrontendList.instance.options.address,
-  ]},
 };
 
 const commands = {
@@ -103,6 +85,7 @@ const commands = {
     if(!address) return console.log('Address required');
     const token = await commands.deployToken();
     const oneToken = '10000000000000000';
+    const onePointOneToken = '11000000000000000';
     await commands.mintToken(token, address, oneToken);
     await web3.eth.sendTransaction({
       to: token,
@@ -119,7 +102,7 @@ const commands = {
       ])
     });
     const result = await contracts.Lwned.instance.methods.newApplication(
-      token, oneToken, oneToken,
+      token, oneToken, onePointOneToken,
       (await currentTimestamp()) + SECONDS_PER_DAY * 1,
       (await currentTimestamp()) + SECONDS_PER_DAY * 3,
       [ token ],
@@ -300,6 +283,7 @@ async function deployContracts() {
   // Provide contract addresses to frontend
   fs.writeFileSync(`${BUILD_DIR}config.json`, JSON.stringify({
     rpc: `http://localhost:${PORT}`,
+    root: 'http://localhost:3000/',
     chain: '0x539',
     chainName: 'Localhost',
     nativeCurrency: {
@@ -315,44 +299,7 @@ async function deployContracts() {
       return out;
     }, {}),
   }));
-  console.log('Serving frontend on port', port);
   console.log('Lwned Development Chain CLI\nType "help" for commands, ctrl+c to exit');
   process.stdout.write(PROMPT);
 }
 
-
-
-
-// Begin frontend server
-function serveFile(filename, rewrite, mime) {
-  return {
-    ['/' + (rewrite === undefined ? filename : rewrite)]: {
-      async GET(req, urlMatch, parsedUrl) {
-        return {
-          mime: mime ? mime : 'text/html',
-          data: fs.readFileSync(PUBLIC_DIR + filename, { encoding: !mime ? 'utf8' : undefined })
-        };
-      }
-    }
-  }
-}
-
-class DevServer extends HTMLServer {
-  constructor() {
-    const opt = {
-      ...serveFile('index.html', ''),
-      ...serveFile('deps/web3.min.js'),
-      ...serveFile('deps/coinbase.min.js'),
-      ...serveFile('deps/web3modal.min.js'),
-      ...serveFile('wallet.js'),
-      ...serveFile('style.css'),
-      ...serveFile('logo.png', undefined,'image/png'),
-      ...serveFile('../build/config.json', 'config.json'),
-    };
-    super(opt);
-  }
-}
-
-const app = new DevServer;
-const port = process.env.PORT || 3000;
-app.listen(port);
