@@ -23,6 +23,10 @@ const hostable = [
   'ILoan.abi',
   'IERC20.abi',
 ];
+importScripts('/pages/loan.js');
+importScripts('/pages/apply.js');
+importScripts('/pages/header.js');
+
 const states = ['Pending', 'Active', 'Repaid', 'Defaulted', 'Canceled'];
 
 self.addEventListener('fetch', (event) => {
@@ -53,205 +57,22 @@ async function loader(request) {
     config.contracts.LwnedBrowser.address);
 
   let path = url.pathname.match(/^\/([^\/]+)\/([\s\S]+)?/);
+  let out;
   if(url.pathname === '/new-loan') {
-    return new Response(htmlHeader() + applyForm(lwned), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    out = htmlHeader('Apply for Loan') + applyForm(lwned);
   } else if(path && path[1] === 'loan') {
     const loan = await browser.methods.single(path[2]).call();
-    return new Response(htmlHeader() + await loanDetails(loan), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    out = htmlHeader(userInput(loan.name)) + await loanDetails(loan);
   } else if(path && path[1] === 'comments') {
-    return new Response(htmlHeader(), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    out = htmlHeader('Comments NYI');
   } else if(path && path[1] === 'account') {
-    return new Response(htmlHeader(), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    out = htmlHeader('Lwned');
   } else {
-    const views = [
-      { label: 'Pending (Query irrelevant)',
-        method: 'pending', count: 'pendingCount' },
-      { label: 'Active (Query irrelevant)',
-        method: 'active', count: 'activeCount' },
-      { label: 'By Borrower Account',
-        input: 'address',
-        method: 'byBorrower', count: 'countOf' },
-      { label: 'By Borrower ID Hash',
-        input: 'bytes32',
-        method: 'byBorrowerIdHash', count: 'countOfIdHash' },
-      { label: 'By Lender Account',
-        input: 'address',
-        method: 'byLender', count: 'countOfLender' },
-    ]
-    
-    let method = url.searchParams.get('method');
-    if(!method || views.filter(x => x.method === method).length === 0) method = views[0].method;
-    const curView = views.filter(x => x.method === method)[0];
-
-    const viewForm = `
-      <form>
-        <fieldset>
-          <legend>Display Options</legend>
-          <select name="method">
-            ${views.map(view => `
-              <option value="${view.method}" ${view.method === method ? 'selected' :''}>
-                ${view.label}
-              </option>
-            `).join('')}
-          </select>
-          <label><span>Query:</span>
-          <input name="q" value="${htmlEscape(url.searchParams.get('q') || '')}">
-          </label>
-          <label><span>Start:</span>
-          <input name="start" value="${htmlEscape(url.searchParams.get('start') || '0')}">
-          </label>
-          <label><span>Count:</span>
-          <input name="count" value="${htmlEscape(url.searchParams.get('count') || '100')}">
-          </label>
-          <button>Update</button>
-        </fieldset>
-      </form>
-    `;
-
-
-    const args = [lwned.options.address];
-    const countArgs = [];
-    if('input' in curView) {
-      args.push(url.searchParams.get('q'));
-      countArgs.push(url.searchParams.get('q'));
-    }
-    const start = Number(url.searchParams.get('start') || 0);
-    args.push(start);
-    args.push(url.searchParams.get('count') || 100);
-
-    const total = await lwned.methods[curView.count](...countArgs).call()
-    const result = await browser.methods[method](...args).call();
-    const tokens = await tokenData(result.map(loan => loan.collateralTokens.concat(loan.token)).flat());
-    const now = await currentTimestamp();
-    const invested = [];
-    for(let loan of result) {
-      invested.push(await totalSupply(loan.loan));
-    }
-    const output = htmlHeader() + viewForm + loanTable(result, tokens, invested, start, total, now);
-    return new Response(output, {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    out = htmlHeader('Lwned') + await loanList(url, lwned, browser);
   }
-  // XXX unreachable
-  return new Response(`<p>Unable to load document</p>`, {
+  return new Response(out, {
     headers: { 'Content-Type': 'text/html' }
   });
-}
-
-async function loanDetails(loan) {
-  const tokens = await tokenData(loan.collateralTokens.concat(loan.token));
-  const invested = await totalSupply(loan.loan);
-  const now = await currentTimestamp();
-  return `
-    <div class="loan">
-      ${loanSpec(loan, tokens, invested, now)}
-    </div>
-    <div class="loan-text">${userInput(loan.text)}</div>
-    <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>
-  `;
-}
-
-function loanSpec(loan, tokens, invested, now) {
-  return `
-    <span class="status-badge ${states[loan.status]}">${states[loan.status]}</span>
-    <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
-    <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></span>
-    <span class="amount">${loan.status === '0' ? `Raised ${tokens(loan.token, invested, true)} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() - 10000) / 100}%</span>
-    ${loan.status !== '0' ? '' : `
-    <span class="deadline-issue">Issue by ${new Date(loan.deadlineIssue * 1000).toLocaleString()} (${loan.deadlineIssue > now ? remaining(loan.deadlineIssue - now) : 'Deadline Passed'})</span>`}
-    <span class="deadline-repay">Repay by ${new Date(loan.deadlineRepay * 1000).toLocaleString()} (${loan.deadlineRepay > now ? remaining(loan.deadlineRepay - now) : 'Deadline Passed'})</span>
-    <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
-      tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
-  `;
-}
-
-function loanTable(data, tokens, invested, start, total, now) {
-  return `
-    <p class="paging">${start+1}-${start+data.length} of ${total}</p>
-    <ol class="loans" start="${start+1}">
-      ${data.map((loan, index) => `
-        <li class="loan">${loanSpec(loan, tokens, invested[index], now)}</li>
-      `).join('')}
-    </ol>
-
-  `;
-}
-
-function htmlHeader() {
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Lwned</title>
-        <script src="/deps/web3.min.js"></script>
-        <script src="/deps/coinbase.min.js"></script>
-        <script src="/deps/web3modal.min.js"></script>
-        <script src="/index.js" type="module"></script>
-        <link rel="stylesheet" href="/normalize.css">
-        <link rel="stylesheet" href="/concrete.css">
-        <link rel="stylesheet" href="/style.css">
-      </head>
-      <body>
-      <main>
-        <header>
-          <div id="wallet-status"></div>
-        </header>
-  `;
-}
-
-function applyForm(lwned) {
-  return `
-    <form id="new-loan" onsubmit="submitNewLoanForm(this); return false;">
-      <fieldset><legend>New Loan Application</legend>
-      <label for="loan-name">Loan Name</label>
-      <input id="loan-name" required minlength="5" maxlength="160">
-      <label for="token">Token</label>
-      <input name="token" id="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span></span>${commonTokens()}
-      <label for="loan-give">Loan Amount</label>
-      <input id="loan-give" name="toGive" required>
-      <label for="loan-repay">Repayment Amount</label>
-      <input id="loan-repay" name="toRepay" required>
-      <label for="deadline-issue">Issuance Deadline</label>
-      <input id="deadline-issue" name="deadlineIssueDate" required type="date">
-      <input name="deadlineIssueTime" required type="time">
-      <label for="deadline-repay">Repayment Deadline</label>
-      <input id="deadline-repay" name="deadlineRepayDate" required type="date">
-      <input name="deadlineRepayTime" required type="time">
-      <label>Collateral</label>
-      <div class="collateral">
-        <button type="button" onclick="addCollateral(this)">Add Collateral...</button>
-      </div>
-      <label for="text">Submission Statement</label>
-      <textarea id="text" name="text"></textarea>
-      <button type="submit">Submit</button>
-      <p><a href="${explorer(lwned.options.address)}">View Contract on Explorer</a></p>
-      </fieldset>
-    </form>
-  `;
-}
-
-function commonTokens() {
-  return `
-    <div class="common">
-      ${tokenButton("0x2791bca1f2de4661ed88a30c99a7a9449aa84174", "USDC")}
-      ${tokenButton("0xc2132d05d31c914a87c6611c10748aeb04b58e8f", "USDT")}
-      ${tokenButton("0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", "DAI")}
-    </div>
-  `;
-}
-
-function tokenButton(tokenAddress, tokenSymbol) {
-  return `<button type="button" onclick="const el=this.parentNode.parentNode.firstElementChild; el.value='${tokenAddress}'; el.onchange(); return false">${tokenSymbol}</button>`;
 }
 
 // TODO cache for entire page view
@@ -279,6 +100,13 @@ async function totalSupply(tokenAddress) {
     await (await fetch('/IERC20.abi')).json(),
     tokenAddress);
   return await token.methods.totalSupply().call();
+}
+
+async function decimals(tokenAddress) {
+  const token = new web3.eth.Contract(
+    await (await fetch('/IERC20.abi')).json(),
+    tokenAddress);
+  return await token.methods.decimals().call();
 }
 
 function userInput(text) {

@@ -185,6 +185,7 @@ contract Lwned {
   mapping(address => Loan[]) public loansByLender;
   mapping(address => mapping(address => bool)) public loansByLenderMap;
   // TODO views with only loans from accounts with id hash?
+  // TODO view by loan token?
   AddressSet.Set pendingApplications;
   AddressSet.Set activeLoans;
 

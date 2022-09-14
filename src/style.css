@@ -3,4 +3,10 @@ ol.loans {}
 .loan>span, .loan>a {display:block;}
 
 .status-badge { float:left; padding: 0 5px; border-radius: 4px; margin-right: 5px; }
-.status-badge.Pending {background:#d1e7dd99;}
+.status-badge.Pending {background:#fff3cd99;}
+.status-badge.Active {background:#cfe2ff99;}
+.status-badge.Repaid {background:#d1e7dd99;}
+.status-badge.Defaulted {background:#f8d7da99;}
+.status-badge.Canceled {background:#cff4fc99;}
+
+[data-my-balance] { font-size:80%; font-weight:normal; }

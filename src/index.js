@@ -14,6 +14,22 @@ window.addEventListener('load', async function() {
   } else {
     walletEl.innerHTML = `<button onclick="connect()" title="Connect Wallet">Connect Wallet</button>`;
   }
+
+  if(accounts) {
+    document.querySelectorAll('[data-my-balance]').forEach(async span => {
+      const token = await erc20(span.getAttribute('data-my-balance'));
+      span.innerHTML = 'My Balance: ' + applyDecimals(
+        await token.methods.balanceOf(accounts[0]).call(),
+        await token.methods.decimals().call());
+    });
+  }
+
+  document.querySelectorAll('.loan-actions').forEach(async el => {
+    const borrower = el.getAttribute('data-borrower');
+    if(!accounts || borrower.toLowerCase() !== accounts[0].toLowerCase()) {
+      el.querySelectorAll('button').forEach(button => button.setAttribute('disabled', ''));
+    }
+  });
 });
 
 window.connect = async function() {
@@ -32,9 +48,7 @@ window.disconnect = async function() {
 }
 
 async function erc20(address) {
-  return new web3.eth.Contract(
-    await (await fetch('/IERC20.abi')).json(),
-    address);
+  return new web3.eth.Contract(await (await fetch('/IERC20.abi')).json(), address);
 }
 
 window.submitNewLoanForm = async function(form) {
@@ -93,4 +107,50 @@ window.addCollateral = async function(el) {
 }
 window.removeCollateral = function(button) {
   button.closest('.collateral').removeChild(button.closest('.collateral-item'))
+}
+
+window.loanInvest = async function(form) {
+  const loan = new web3.eth.Contract(
+    await (await fetch('/ILoan.abi')).json(),
+    form.getAttribute('data-loan'));
+  const loanToken = await erc20(form.getAttribute('data-token'));
+  const tokenDecimals = await loanToken.methods.decimals().call();
+  // Approve spend to loan
+  const amount = reverseDecimals(form.querySelector('input').value, await loanToken.methods.decimals().call());
+  await loanToken.methods.approve(loan.options.address, amount).send({from:accounts[0]});
+  await loan.methods.invest(amount).send({from: accounts[0]});
+  window.location.reload();
+}
+
+window.loanDivest = async function(form) {
+  const loan = new web3.eth.Contract(
+    await (await fetch('/ILoan.abi')).json(),
+    form.getAttribute('data-loan'));
+  const loanToken = await erc20(form.getAttribute('data-token'));
+  const tokenDecimals = await loanToken.methods.decimals().call();
+  const amount = reverseDecimals(form.querySelector('input').value, await loanToken.methods.decimals().call());
+  await loan.methods.divest(amount).send({from: accounts[0]});
+  window.location.reload();
+}
+
+window.loanIssue = async function(loanAddr) {
+  const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
+  await loan.methods.loanIssue().send({from: accounts[0]});
+  window.location.reload();
+}
+
+window.loanCancel = async function(loanAddr) {
+  const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
+  await loan.methods.loanCancel().send({from: accounts[0]});
+  window.location.reload();
+}
+
+window.loanRepay = async function(loanAddr, token, amount) {
+  const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
+  const loanToken = await erc20(token);
+  const tokenDecimals = await loanToken.methods.decimals().call();
+  // Approve spend to loan
+  await loanToken.methods.approve(loanAddr, amount).send({from:accounts[0]});
+  await loan.methods.loanRepay().send({from: accounts[0]});
+  window.location.reload();
 }
