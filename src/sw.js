@@ -24,6 +24,7 @@ const hostable = [
   'IERC20.abi',
 ];
 importScripts('/pages/loan.js');
+importScripts('/pages/comments.js');
 importScripts('/pages/apply.js');
 importScripts('/pages/header.js');
 
@@ -64,7 +65,8 @@ async function loader(request) {
     const loan = await browser.methods.single(path[2]).call();
     out = htmlHeader(userInput(loan.name)) + await loanDetails(loan);
   } else if(path && path[1] === 'comments') {
-    out = htmlHeader('Comments NYI');
+    const loan = await browser.methods.single(path[2]).call();
+    out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser);
   } else if(path && path[1] === 'account') {
     out = htmlHeader('Lwned');
   } else {
@@ -194,7 +196,7 @@ function ellipseAddress(address) {
   return address.slice(0, 6) + '&hellip;' + address.slice(-4);
 }
 
-function remaining(seconds) {
+function remaining(seconds, onlyBiggest) {
   const units = [
     { value: 1, unit: 'second' },
     { value: 60, unit: 'minute' },
@@ -207,6 +209,7 @@ function remaining(seconds) {
     if(remaining >= units[i].value) {
       const count = Math.floor(remaining / units[i].value);
       out.push(count.toString(10) + ' ' + units[i].unit + (count !== 1 ? 's' : ''));
+      if(onlyBiggest) return out[0];
       remaining = remaining - (count * units[i].value);
     }
   }

@@ -34,9 +34,9 @@ function loanSpec(loan, tokens, invested, now) {
     <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></span>
     <span class="amount">${loan.status === '0' ? `Raised ${tokens(loan.token, invested, true)} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() - 10000) / 100}%</span>
-    ${loan.status !== '0' ? '' : `
-    <span class="deadline-issue">Issue by ${new Date(loan.deadlineIssue * 1000).toLocaleString()} (${loan.deadlineIssue > now ? remaining(loan.deadlineIssue - now) : 'Deadline Passed'})</span>`}
-    <span class="deadline-repay">Repay by ${new Date(loan.deadlineRepay * 1000).toLocaleString()} (${loan.deadlineRepay > now ? remaining(loan.deadlineRepay - now) : 'Deadline Passed'})</span>
+    <span class="deadline">${loan.status !== '0' ? '' : `
+    ${loan.deadlineIssue > now ? `Issue within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, true)}` : 'Issuance Deadline Passed'}</time>,`}
+    ${loan.deadlineRepay > now ? `Repay within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, true)}` : 'Repayment Deadline Passed'}</time></span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
   `;

@@ -350,3 +350,50 @@ exports.investMultipleTimes = async function({
   assert.strictEqual(await factory.methods.loansByLender(accounts[1], 0).call(), loan.options.address);
 
 }
+
+
+exports.postComment = async function({
+  web3, accounts, deployContract, loadContract, throws, BURN_ACCOUNT, increaseTime,
+}) {
+  const verify = await deployContract(accounts[0], 'MockVerification');
+  const factory = await deployContract(accounts[0], 'Lwned', verify.options.address);
+  const token = await deployContract(accounts[0], 'MockERC20');
+  const browser = await deployContract(accounts[0], 'LwnedBrowser');
+
+  const now = (await web3.eth.getBlock('latest')).timestamp;
+  const deadlineIssue = 30;
+  const deadlineRepay = 300;
+  const toGive = 1000000;
+  const toRepay  = 1090000;
+  const interest = toRepay - toGive;
+  const collateral = 500000;
+  const submissionStatement = "heyo gimme some skrilla";
+
+  await token.sendFrom(accounts[0]).mint(accounts[0], collateral + interest);
+  await token.sendFrom(accounts[0]).approve(factory.options.address, collateral + interest);
+
+  // Create loan
+  const result = await factory.sendFrom(accounts[0]).newApplication(
+    token.options.address,
+    toGive,
+    toRepay,
+    now + deadlineIssue,
+    now + deadlineIssue + deadlineRepay,
+    [token.options.address],
+    [collateral],
+    submissionStatement, 'Loan Name'
+  );
+
+  assert.strictEqual(result.events.NewApplication.returnValues.borrower, accounts[0]);
+  const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
+  const iloan = await loadContract('ILoan', result.events.NewApplication.returnValues.loan);
+
+  const commentText = 'hello';
+  await browser.sendFrom(accounts[0]).postComment(loan.options.address, commentText);
+  const list = await browser.methods.comments(loan.options.address, 0, 2).call();
+  assert.strictEqual(list.length, 1);
+  assert.strictEqual(list[0].author, accounts[0]);
+  assert.strictEqual(list[0].text, commentText);
+
+};
+

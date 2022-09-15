@@ -1,4 +1,4 @@
-![Lwned Logo](public/logo.png)
+![Lwned Logo](src/lwned.png)
 # Lwned
 
 "Need cash? Get Lwned!"
@@ -50,6 +50,8 @@ mintToken [tokenAddress] [accountAddress] [amount]
 #  approve spend,
 #  and submit loan application
 fastApply [address]
+# Same as previous but also invest and issue the loan
+fastIssue [address]
 # Set a user as passport verified, expiration default: 1 year
 verify [address] [expiration]
 # Fetch the expiration value

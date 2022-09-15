@@ -26,6 +26,8 @@ contract LwnedBrowser {
     uint timestamp;
     string text;
   }
+  mapping(address => Comment[]) public _comments;
+  event NewComment(address indexed loan, address indexed author, string text);
 
   function single(address loanAddress) public view returns(LoanDetails memory) {
     ILoan loan = ILoan(loanAddress);
@@ -41,7 +43,7 @@ contract LwnedBrowser {
       loan.deadlineRepay(),
       loan.allCollateralTokens(),
       loan.allCollateralAmounts(),
-      loan.commentCount(),
+      commentCount(address(loan)),
       loan.text(),
       loan.name()
     );
@@ -159,11 +161,11 @@ contract LwnedBrowser {
   }
 
   function comments(
-    ILoan loan,
+    address loan,
     uint startIndex,
     uint fetchCount
   ) external view returns(Comment[] memory) {
-    uint itemCount = loan.commentCount();
+    uint itemCount = commentCount(loan);
     if(itemCount == 0) {
       return new Comment[](0);
     }
@@ -173,9 +175,17 @@ contract LwnedBrowser {
     }
     Comment[] memory out = new Comment[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan.Comment memory raw = loan.comments(i);
-      out[i] = Comment(raw.author, raw.timestamp, raw.text);
+      out[i] = _comments[loan][startIndex + i];
     }
     return out;
+  }
+
+  function commentCount(address loan) public view returns(uint) {
+    return _comments[loan].length;
+  }
+
+  function postComment(address loan, string memory _text) external {
+    _comments[loan].push(Comment(msg.sender, block.timestamp, _text));
+    emit NewComment(loan, msg.sender, _text);
   }
 }

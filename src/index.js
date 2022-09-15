@@ -154,3 +154,14 @@ window.loanRepay = async function(loanAddr, token, amount) {
   await loan.methods.loanRepay().send({from: accounts[0]});
   window.location.reload();
 }
+
+window.postComment = async function(form) {
+  const browser = new web3.eth.Contract(
+    await (await fetch('/ILwnedBrowser.abi')).json(),
+    config.contracts.LwnedBrowser.address);
+  await browser.methods.postComment(
+    form.getAttribute('data-loan'),
+    form.querySelector('textarea').value
+  ).send({from: accounts[0]});
+  window.location.reload();
+}

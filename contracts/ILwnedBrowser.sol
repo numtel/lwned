@@ -64,4 +64,11 @@ interface ILwnedBrowser {
     uint startIndex,
     uint fetchCount
   ) external view returns(Comment[] memory);
+
+  function _comments(address loan, uint index) external view returns(Comment memory);
+
+  event NewComment(address indexed loan, address indexed author, string text);
+
+  function commentCount(address loan) external view returns(uint);
+  function postComment(address loan, string memory _text) external;
 }

@@ -24,14 +24,6 @@ contract Loan is ERC20 {
   string public text;
   string public name;
 
-  struct Comment {
-    address author;
-    uint timestamp;
-    string text;
-  }
-  Comment[] public comments;
-
-  event NewComment(address indexed author, string text);
   event InvestmentChanged(uint oldAmount, uint newAmount);
   event LoanIssued(uint timestamp);
   event LoanRepaid(uint timestamp);
@@ -155,25 +147,12 @@ contract Loan is ERC20 {
     emit LoanDefaulted(block.timestamp);
   }
 
-  function collateralCount() external view returns(uint) {
-    return collateralTokens.length;
-  }
-
   function allCollateralTokens() external view returns(address[] memory) {
     return collateralTokens;
   }
 
   function allCollateralAmounts() external view returns(uint[] memory) {
     return collateralAmounts;
-  }
-
-  function commentCount() external view returns(uint) {
-    return comments.length;
-  }
-
-  function postComment(string memory _text) external {
-    comments.push(Comment(msg.sender, block.timestamp, _text));
-    emit NewComment(msg.sender, _text);
   }
 }
 

@@ -13,21 +13,12 @@ interface ILoan is IERC20 {
   function amountToRepay() external view returns(uint);
   function deadlineIssue() external view returns(uint);
   function deadlineRepay() external view returns(uint);
-  function collateralCount() external view returns(uint);
   function allCollateralTokens() external view returns(address[] memory);
   function allCollateralAmounts() external view returns(uint[] memory);
   function collateralTokens(uint index) external view returns(address);
   function collateralAmounts(uint index) external view returns(uint);
   function text() external view returns(string memory);
 
-  struct Comment {
-    address author;
-    uint timestamp;
-    string text;
-  }
-  function comments(uint index) external view returns(Comment memory);
-
-  event NewComment(address indexed author, string text);
   event InvestmentChanged(uint oldAmount, uint newAmount);
   event LoanIssued(uint timestamp);
   event LoanRepaid(uint timestamp);
@@ -40,6 +31,4 @@ interface ILoan is IERC20 {
   function loanRepay() external;
   function loanCancel() external;
   function loanDefault() external;
-  function commentCount() external view returns(uint);
-  function postComment(string memory _text) external;
 }
