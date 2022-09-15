@@ -52,6 +52,7 @@ async function erc20(address) {
 }
 
 window.submitNewLoanForm = async function(form) {
+  if(!web3) await connect();
   const factory = new web3.eth.Contract(
     await (await fetch('/ILwned.abi')).json(),
     config.contracts.Lwned.address);
@@ -110,6 +111,7 @@ window.removeCollateral = function(button) {
 }
 
 window.loanInvest = async function(form) {
+  if(!web3) await connect();
   const loan = new web3.eth.Contract(
     await (await fetch('/ILoan.abi')).json(),
     form.getAttribute('data-loan'));
@@ -123,6 +125,7 @@ window.loanInvest = async function(form) {
 }
 
 window.loanDivest = async function(form) {
+  if(!web3) await connect();
   const loan = new web3.eth.Contract(
     await (await fetch('/ILoan.abi')).json(),
     form.getAttribute('data-loan'));
@@ -134,18 +137,21 @@ window.loanDivest = async function(form) {
 }
 
 window.loanIssue = async function(loanAddr) {
+  if(!web3) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
   await loan.methods.loanIssue().send({from: accounts[0]});
   window.location.reload();
 }
 
 window.loanCancel = async function(loanAddr) {
+  if(!web3) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
   await loan.methods.loanCancel().send({from: accounts[0]});
   window.location.reload();
 }
 
 window.loanRepay = async function(loanAddr, token, amount) {
+  if(!web3) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
   const loanToken = await erc20(token);
   const tokenDecimals = await loanToken.methods.decimals().call();
@@ -156,6 +162,7 @@ window.loanRepay = async function(loanAddr, token, amount) {
 }
 
 window.postComment = async function(form) {
+  if(!web3) await connect();
   const browser = new web3.eth.Contract(
     await (await fetch('/ILwnedBrowser.abi')).json(),
     config.contracts.LwnedBrowser.address);

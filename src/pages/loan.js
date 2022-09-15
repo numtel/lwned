@@ -10,7 +10,6 @@ async function loanDetails(loan) {
       ${loanSpec(loan, tokens, invested, now)}
     </div>
     <div class="loan-text">${userInput(loan.text)}</div>
-    <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>
     ${loan.status === '0' ? `
       <p class="loan-actions" data-borrower="${loan.borrower}">
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
@@ -39,6 +38,7 @@ function loanSpec(loan, tokens, invested, now) {
     ${loan.deadlineRepay > now ? `Repay within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, true)}` : 'Repayment Deadline Passed'}</time></span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
+    <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>
   `;
 }
 
