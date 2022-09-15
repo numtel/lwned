@@ -71,23 +71,7 @@ contract LwnedBrowser {
     }
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan loan = ILoan(factory.loansByLender(lender, startIndex + i));
-      out[i] = LoanDetails(
-        address(loan),
-        loan.borrower(),
-        loan.idHash(),
-        loan.token(),
-        loan.status(),
-        loan.amountToGive(),
-        loan.amountToRepay(),
-        loan.deadlineIssue(),
-        loan.deadlineRepay(),
-        loan.allCollateralTokens(),
-        loan.allCollateralAmounts(),
-        loan.commentCount(),
-        loan.text(),
-        loan.name()
-      );
+      out[i] = single(factory.loansByLender(lender, startIndex + i));
     }
     return out;
   }
@@ -108,23 +92,7 @@ contract LwnedBrowser {
     }
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan loan = ILoan(factory.loansByBorrower(borrower, startIndex + i));
-      out[i] = LoanDetails(
-        address(loan),
-        borrower,
-        loan.idHash(),
-        loan.token(),
-        loan.status(),
-        loan.amountToGive(),
-        loan.amountToRepay(),
-        loan.deadlineIssue(),
-        loan.deadlineRepay(),
-        loan.allCollateralTokens(),
-        loan.allCollateralAmounts(),
-        loan.commentCount(),
-        loan.text(),
-        loan.name()
-      );
+      out[i] = single(factory.loansByBorrower(borrower, startIndex + i));
     }
     return out;
   }
@@ -145,23 +113,7 @@ contract LwnedBrowser {
     }
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan loan = ILoan(factory.loansByBorrowerIdHash(idHash, startIndex + i));
-      out[i] = LoanDetails(
-        address(loan),
-        loan.borrower(),
-        loan.idHash(),
-        loan.token(),
-        loan.status(),
-        loan.amountToGive(),
-        loan.amountToRepay(),
-        loan.deadlineIssue(),
-        loan.deadlineRepay(),
-        loan.allCollateralTokens(),
-        loan.allCollateralAmounts(),
-        loan.commentCount(),
-        loan.text(),
-        loan.name()
-      );
+      out[i] = single(factory.loansByBorrowerIdHash(idHash, startIndex + i));
     }
     return out;
   }
@@ -181,23 +133,7 @@ contract LwnedBrowser {
     }
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan loan = ILoan(factory.pendingAt(startIndex + i));
-      out[i] = LoanDetails(
-        address(loan),
-        loan.borrower(),
-        loan.idHash(),
-        loan.token(),
-        loan.status(),
-        loan.amountToGive(),
-        loan.amountToRepay(),
-        loan.deadlineIssue(),
-        loan.deadlineRepay(),
-        loan.allCollateralTokens(),
-        loan.allCollateralAmounts(),
-        loan.commentCount(),
-        loan.text(),
-        loan.name()
-      );
+      out[i] = single(factory.pendingAt(startIndex + i));
     }
     return out;
   }
@@ -217,23 +153,7 @@ contract LwnedBrowser {
     }
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
-      ILoan loan = ILoan(factory.activeAt(startIndex + i));
-      out[i] = LoanDetails(
-        address(loan),
-        loan.borrower(),
-        loan.idHash(),
-        loan.token(),
-        loan.status(),
-        loan.amountToGive(),
-        loan.amountToRepay(),
-        loan.deadlineIssue(),
-        loan.deadlineRepay(),
-        loan.allCollateralTokens(),
-        loan.allCollateralAmounts(),
-        loan.commentCount(),
-        loan.text(),
-        loan.name()
-      );
+      out[i] = single(factory.activeAt(startIndex + i));
     }
     return out;
   }
