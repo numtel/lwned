@@ -110,14 +110,13 @@ contract Loan is ERC20 {
     safeTransfer.invoke(token, borrower, amountToGive);
   }
 
-  // Borrower repays loan before deadline
+  // Anyone can repay loan before deadline
   function loanRepay() external {
     require(status == Status.ACTIVE);
-    require(msg.sender == borrower);
     require(deadlineRepay > block.timestamp);
     status = Status.REPAID;
     emit LoanRepaid(block.timestamp);
-    safeTransfer.invokeFrom(token, borrower, address(this), amountToRepay);
+    safeTransfer.invokeFrom(token, msg.sender, address(this), amountToRepay);
     _refundCollateral();
   }
 

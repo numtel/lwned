@@ -7,9 +7,9 @@ async function loanDetails(loan) {
   const now = await currentTimestamp();
   return `
     <div class="loan">
-      ${loanSpec(loan, tokens, invested, now)}
+      ${loanSpec(loan, tokens, invested, now, true)}
     </div>
-    <div class="loan-text">${userInput(loan.text)}</div>
+    <section class="loan-text">${userInput(loan.text)}</section>
     ${loan.status === '0' ? `
       <p class="loan-actions" data-borrower="${loan.borrower}">
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
@@ -17,8 +17,8 @@ async function loanDetails(loan) {
       </p>
       ${investForm(loan, maxInvest) + divestForm(loan)}
     ` : loan.status === '1' ? `
-      <p class="loan-actions" data-borrower="${loan.borrower}">
-        <button onclick="loanRepay('${loan.loan}', '${loan.token}', '${loan.amountToRepay}')">Repay</button>
+      <p class="loan-actions">
+        <button onclick="loanRepay('${loan.loan}', '${loan.token}', '${loan.amountToRepay}')">Repay ${tokens(loan.token, loan.amountToRepay, false, true)}</button>
         <span data-my-balance="${loan.token}"></span>
       </p>
     ` : loan.status === '4' || loan.status === '2' || loan.status === '3' ? `
@@ -27,15 +27,17 @@ async function loanDetails(loan) {
   `;
 }
 
-function loanSpec(loan, tokens, invested, now) {
+function loanSpec(loan, tokens, invested, now, detailed) {
   return `
+    <h2>
     <span class="status-badge ${states[loan.status]}">${states[loan.status]}</span>
     <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
+    </h2>
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></span>
     <span class="amount">${loan.status === '0' ? `Raised ${tokens(loan.token, invested, true)} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() - 10000) / 100}%</span>
     <span class="deadline">${loan.status !== '0' ? '' : `
-    ${loan.deadlineIssue > now ? `Issue within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, true)}` : 'Issuance Deadline Passed'}</time>,`}
-    ${loan.deadlineRepay > now ? `Repay within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, true)}` : 'Repayment Deadline Passed'}</time></span>
+    ${loan.deadlineIssue > now ? `Issue within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, !detailed)}` : 'Issuance Deadline Passed'}</time>,${detailed ? '<br>' :''}`}
+    ${loan.deadlineRepay > now ? `Repay within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, !detailed)}` : 'Repayment Deadline Passed'}</time></span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
     <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>

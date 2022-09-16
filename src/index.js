@@ -24,7 +24,7 @@ window.addEventListener('load', async function() {
     });
   }
 
-  document.querySelectorAll('.loan-actions').forEach(async el => {
+  document.querySelectorAll('.loan-actions[data-borrower]').forEach(async el => {
     const borrower = el.getAttribute('data-borrower');
     if(!accounts || borrower.toLowerCase() !== accounts[0].toLowerCase()) {
       el.querySelectorAll('button').forEach(button => button.setAttribute('disabled', ''));

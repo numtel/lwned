@@ -90,10 +90,12 @@ async function tokenData(tokenAddresses) {
       symbol: await token.methods.symbol().call(),
     };
   }
-  return function displayToken(tokenAddress, amount, skipSymbol) {
+  return function displayToken(tokenAddress, amount, skipSymbol, skipLink) {
+    let symbol = out[tokenAddress].symbol;
+    if(!skipLink) symbol = `<a title="View Token on Explorer" href="${explorer(tokenAddress)}">${symbol}</a>`;
     return (typeof amount !== 'undefined' ?
         applyDecimals(amount, out[tokenAddress].decimals) + ' ' : '') +
-      (skipSymbol ? '' : `<a title="View Token on Explorer" href="${explorer(tokenAddress)}">${out[tokenAddress].symbol}</a>`);
+      (skipSymbol ? '' : symbol);
   };
 }
 
