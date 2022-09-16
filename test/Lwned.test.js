@@ -335,6 +335,7 @@ exports.investMultipleTimes = async function({
   );
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
   assert.strictEqual(await factory.methods.countOfIdHash(idHash).call(), '1');
+  assert.strictEqual(await factory.methods.pendingCountWithIdHash().call(), '1');
   assert.strictEqual(await factory.methods.loansByBorrowerIdHash(idHash, 0).call(), loan.options.address);
 
   // Invest and divest from the loan
@@ -386,7 +387,7 @@ exports.postComment = async function({
 
   assert.strictEqual(result.events.NewApplication.returnValues.borrower, accounts[0]);
   const loan = await loadContract('Loan', result.events.NewApplication.returnValues.loan);
-  const iloan = await loadContract('ILoan', result.events.NewApplication.returnValues.loan);
+  assert.strictEqual(await factory.methods.pendingCountWithIdHash().call(), '0');
 
   const commentText = 'hello';
   await browser.sendFrom(accounts[0]).postComment(loan.options.address, commentText);

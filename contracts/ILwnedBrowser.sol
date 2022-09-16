@@ -33,6 +33,13 @@ interface ILwnedBrowser {
     uint fetchCount
   ) external view returns(LoanDetails[] memory);
 
+  function byToken(
+    address factory,
+    address token,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory);
+
   function byBorrower(
     address factory,
     address borrower,
@@ -48,6 +55,12 @@ interface ILwnedBrowser {
   ) external view returns(LoanDetails[] memory);
 
   function pending(
+    address factory,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory);
+
+  function pendingWithIdHash(
     address factory,
     uint startIndex,
     uint fetchCount

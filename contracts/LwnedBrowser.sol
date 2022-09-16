@@ -78,6 +78,27 @@ contract LwnedBrowser {
     return out;
   }
 
+  function byToken(
+    ILwned factory,
+    address token,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.countOfToken(token);
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      out[i] = single(factory.loansByToken(token, startIndex + i));
+    }
+    return out;
+  }
+
   function byBorrower(
     ILwned factory,
     address borrower,
@@ -136,6 +157,26 @@ contract LwnedBrowser {
     LoanDetails[] memory out = new LoanDetails[](fetchCount);
     for(uint i; i < fetchCount; i++) {
       out[i] = single(factory.pendingAt(startIndex + i));
+    }
+    return out;
+  }
+
+  function pendingWithIdHash(
+    ILwned factory,
+    uint startIndex,
+    uint fetchCount
+  ) external view returns(LoanDetails[] memory) {
+    uint itemCount = factory.pendingCountWithIdHash();
+    if(itemCount == 0) {
+      return new LoanDetails[](0);
+    }
+    require(startIndex < itemCount);
+    if(startIndex + fetchCount >= itemCount) {
+      fetchCount = itemCount - startIndex;
+    }
+    LoanDetails[] memory out = new LoanDetails[](fetchCount);
+    for(uint i; i < fetchCount; i++) {
+      out[i] = single(factory.pendingAtWithIdHash(startIndex + i));
     }
     return out;
   }

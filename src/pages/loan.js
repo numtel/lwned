@@ -88,6 +88,8 @@ async function loanList(url, lwned, browser) {
   const views = [
     { label: 'Pending (Query irrelevant)',
       method: 'pending', count: 'pendingCount' },
+    { label: 'Pending with ID Hash (Query irrelevant)',
+      method: 'pendingWithIdHash', count: 'pendingCountWithIdHash' },
     { label: 'Active (Query irrelevant)',
       method: 'active', count: 'activeCount' },
     { label: 'By Borrower Account',
@@ -99,6 +101,9 @@ async function loanList(url, lwned, browser) {
     { label: 'By Lender Account',
       input: 'address',
       method: 'byLender', count: 'countOfLender' },
+    { label: 'By Token',
+      input: 'address',
+      method: 'byToken', count: 'countOfToken' },
   ]
   
   let method = url.searchParams.get('method');

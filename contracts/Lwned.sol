@@ -162,10 +162,10 @@ contract Lwned {
   mapping(address => Loan[]) public loansByBorrower;
   mapping(bytes32 => Loan[]) public loansByBorrowerIdHash;
   mapping(address => Loan[]) public loansByLender;
+  mapping(address => Loan[]) public loansByToken;
   mapping(address => mapping(address => bool)) public loansByLenderMap;
-  // TODO views with only loans from accounts with id hash?
-  // TODO view by loan token?
   AddressSet.Set pendingApplications;
+  AddressSet.Set pendingApplicationsWithIdHash;
   AddressSet.Set activeLoans;
 
   event NewApplication(address indexed borrower, address loan);
@@ -214,11 +214,13 @@ contract Lwned {
     }
 
     loansByBorrower[msg.sender].push(application);
+    loansByToken[_token].push(application);
     pendingApplications.insert(address(application));
     emit NewApplication(msg.sender, address(application));
 
     if(uint256(idHash) > 0) {
       loansByBorrowerIdHash[idHash].push(application);
+      pendingApplicationsWithIdHash.insert(address(application));
     }
   }
 
@@ -235,6 +237,9 @@ contract Lwned {
   function markAsActive() external {
     require(pendingApplications.exists(msg.sender));
     pendingApplications.remove(msg.sender);
+    if(pendingApplicationsWithIdHash.exists(msg.sender)) {
+      pendingApplicationsWithIdHash.remove(msg.sender);
+    }
     activeLoans.insert(msg.sender);
   }
 
@@ -256,12 +261,24 @@ contract Lwned {
     return loansByLender[account].length;
   }
 
+  function countOfToken(address token) external view returns(uint) {
+    return loansByToken[token].length;
+  }
+
   function pendingCount() external view returns(uint) {
     return pendingApplications.count();
   }
 
   function pendingAt(uint index) external view returns(address) {
     return pendingApplications.keyList[index];
+  }
+
+  function pendingCountWithIdHash() external view returns(uint) {
+    return pendingApplicationsWithIdHash.count();
+  }
+
+  function pendingAtWithIdHash(uint index) external view returns(address) {
+    return pendingApplicationsWithIdHash.keyList[index];
   }
 
   function activeCount() external view returns(uint) {
