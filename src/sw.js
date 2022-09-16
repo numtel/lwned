@@ -59,18 +59,23 @@ async function loader(request) {
 
   let path = url.pathname.match(/^\/([^\/]+)\/([\s\S]+)?/);
   let out;
-  if(url.pathname === '/new-loan') {
-    out = htmlHeader('Apply for Loan') + applyForm(lwned);
-  } else if(path && path[1] === 'loan') {
-    const loan = await browser.methods.single(path[2]).call();
-    out = htmlHeader(userInput(loan.name)) + await loanDetails(loan);
-  } else if(path && path[1] === 'comments') {
-    const loan = await browser.methods.single(path[2]).call();
-    out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser);
-  } else if(path && path[1] === 'account') {
-    out = htmlHeader('Lwned');
-  } else {
-    out = htmlHeader('Lwned') + await loanList(url, lwned, browser);
+  try {
+    if(url.pathname === '/new-loan') {
+      out = htmlHeader('Apply for Loan') + applyForm(lwned);
+    } else if(path && path[1] === 'loan') {
+      const loan = await browser.methods.single(path[2]).call();
+      out = htmlHeader(userInput(loan.name)) + await loanDetails(loan);
+    } else if(path && path[1] === 'comments') {
+      const loan = await browser.methods.single(path[2]).call();
+      out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser);
+    } else if(path && path[1] === 'account') {
+      out = htmlHeader('Lwned');
+    } else {
+      out = htmlHeader('Lwned') + await loanList(url, lwned, browser);
+    }
+  } catch(error) {
+    console.error(error);
+    out = htmlHeader('Lwned Error!') + `<p>An error has occurred!</p>`;
   }
   return new Response(out, {
     headers: { 'Content-Type': 'text/html' }
