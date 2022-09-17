@@ -25,6 +25,7 @@ interface ILwnedBrowser {
   }
 
   function single(address loanAddress) external view returns(LoanDetails memory);
+  function many(address[] memory loanAddress) external view returns(LoanDetails[] memory);
 
   function byLender(
     address factory,
