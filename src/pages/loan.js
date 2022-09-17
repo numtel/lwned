@@ -5,39 +5,52 @@ async function loanDetails(loan) {
   const loanDecimals = await decimals(loan.loan);
   const maxInvest = applyDecimals(new web3.utils.BN(loan.amountToGive).sub(new web3.utils.BN(invested)).toString(), loanDecimals);
   const now = await currentTimestamp();
+  // loan argument is web3.js immutable result
+  const status = actualStatus(loan, now);
   return `
     <div class="loan">
-      ${loanSpec(loan, tokens, invested, now, true)}
+      ${loanSpec(loan, tokens, invested, status, now, true)}
     </div>
     <section class="loan-text">${userInput(loan.text)}</section>
-    ${loan.status === '0' ? `
+    ${status === '0' ? `
       <p class="loan-actions" data-borrower="${loan.borrower}">
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
         <button onclick="loanCancel('${loan.loan}')">Cancel</button>
       </p>
       ${investForm(loan, maxInvest) + divestForm(loan)}
-    ` : loan.status === '1' ? `
+    ` : status === '1' ? `
       <p class="loan-actions">
         <button onclick="loanRepay('${loan.loan}', '${loan.token}', '${loan.amountToRepay}')">Repay ${tokens(loan.token, loan.amountToRepay, false, true)}</button>
         <span data-my-balance="${loan.token}"></span>
       </p>
-    ` : loan.status === '4' || loan.status === '2' || loan.status === '3' ? `
+    ` : status === '4' || status === '2' || status === '3' ? `
       ${divestForm(loan)}
     ` : ''}
   `;
 }
 
-function loanSpec(loan, tokens, invested, now, detailed) {
+function actualStatus(loan, now) {
+  return (
+    // defacto defaulted
+    (loan.deadlineRepay < now && loan.status === '1') ? '3' :
+    // defacto canceled
+    (loan.deadlineIssue < now && loan.status === '0') ? '4' :
+    // no modification required
+    loan.status);
+}
+
+function loanSpec(loan, tokens, invested, status, now, detailed) {
+  const fullRepayPercent = Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber()) / 100;
+  const repayTime = loan.deadlineRepay > now ? ` within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, !detailed)}</time>` : '';
+  const issueTime = loan.deadlineIssue > now ? ` within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, !detailed)}</time>` : '';
+
   return `
     <h2>
-    <span class="status-badge ${states[loan.status]}">${states[loan.status]}</span>
+    <span class="status-badge ${states[status]}">${states[status]}</span>
     <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
     </h2>
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${ellipseAddress(loan.borrower)}</a></span>
-    <span class="amount">${loan.status === '0' ? `Raised ${tokens(loan.token, invested, true)} of ` : ''}${tokens(loan.token, loan.amountToGive)}, pays ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber() - 10000) / 100}%</span>
-    <span class="deadline">${loan.status !== '0' ? '' : `
-    ${loan.deadlineIssue > now ? `Issue within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, !detailed)}` : 'Issuance Deadline Passed'}</time>,${detailed ? '<br>' :''}`}
-    ${loan.deadlineRepay > now ? `Repay within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, !detailed)}` : 'Repayment Deadline Passed'}</time></span>
+    <span class="amount">${status === '0' ? `Looking to raise ${tokens(loan.token, new web3.utils.BN(loan.amountToGive).sub(new web3.utils.BN(invested)).toString(), true)} of ` : status === '4' ? 'Did not raise ' : ''}${tokens(loan.token, loan.amountToGive)}${status === '0' ? `${issueTime}, will repay ${fullRepayPercent}%${repayTime}` : status === '1' ? `, waiting for repay of ${fullRepayPercent}%${repayTime}` : status === '2' ? `, repaid ${fullRepayPercent}%` : ''}</span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
     <p><a href="/comments/${loan.loan}">Comments: ${loan.commentCount}</a></p>
@@ -63,7 +76,7 @@ function investForm(loan, maxInvest) {
 function divestForm(loan) {
   return `
     <form onsubmit="loanDivest(this); return false" data-loan="${loan.loan}" data-token="${loan.token}">
-      <fieldset><legend>Divest</legend>
+      <fieldset><legend>Divest${loan.status == "2" ? ` from repayment of ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber()) / 100}%` : loan.status == "3" ? ` from collateral` : ''}</legend>
       <div class="row">
       <label for="divest-amount">Amount <span data-my-balance="${loan.loan}"></span></label>
       <input id="divest-amount" type="number" required min="0">
@@ -79,7 +92,7 @@ function loanTable(data, tokens, invested, start, total, now) {
     <p class="paging">${start+1}-${start+data.length} of ${total}</p>
     <ol class="loans" start="${start+1}">
       ${data.map((loan, index) => `
-        <li class="loan">${loanSpec(loan, tokens, invested[index], now)}</li>
+        <li class="loan">${loanSpec(loan, tokens, invested[index], actualStatus(loan, now), now)}</li>
       `).join('')}
     </ol>
 
