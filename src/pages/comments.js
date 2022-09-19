@@ -1,5 +1,5 @@
 
-async function loanComments(loan, url, browser) {
+async function loanComments(loan, url, browser, lensHub) {
   const viewForm = `
     <form>
       <fieldset>
@@ -23,23 +23,35 @@ async function loanComments(loan, url, browser) {
   const total = await browser.methods.commentCount(loan.loan).call()
   const result = await browser.methods.comments(...args).call();
   const now = await currentTimestamp();
-  return postForm(loan) + viewForm + commentList(result, start, total, now);
+  return postForm(loan) + viewForm + await commentList(result, start, total, now, lensHub);
 }
 
-function commentList(data, start, total, now) {
+async function commentList(data, start, total, now, lensHub) {
+  let commentHTML = '';
+  for(let comment of data) {
+    commentHTML += `
+      <li class="comment">${await commentRender(comment, now, lensHub)}</li>
+    `;
+  }
   return `
     <p class="paging">${start+1}-${start+data.length} of ${total}</p>
     <ol class="comments" start="${start+1}">
-      ${data.map((comment, index) => `
-        <li class="comment">${commentRender(comment, now)}</li>
-      `).join('')}
+      ${commentHTML}
     </ol>
   `;
 }
 
-function commentRender(comment, now) {
+async function commentRender(comment, now, lensHub) {
+  const lensProfileId = await lensHub.methods.defaultProfile(comment.author).call();
+  let lensProfile;
+  if(lensProfileId !== '0') {
+    lensProfile = await lensHub.methods.getProfile(lensProfileId).call();
+  }
   return `
-    <span class="author">Author: <a href="/account/${comment.author}" title="Author Profile">${ellipseAddress(comment.author)}</a></span>
+    <span class="author">Author: <a href="/account/${comment.author}" title="Author Profile">${lensProfile ? `
+        <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
+        ${lensProfile.handle}
+      ` : ellipseAddress(comment.author)}</a></span>
     <time datetime="${new Date(comment.timestamp * 1000).toJSON()}">${new Date(comment.timestamp * 1000).toLocaleString()}</time>
     <div class="comment-text">${userInput(comment.text)}</div>
   `;

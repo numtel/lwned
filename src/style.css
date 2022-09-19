@@ -11,4 +11,4 @@ ol.loans {}
 
 [data-my-balance] { font-size:80%; font-weight:normal; }
 
-.lens-profile img { width:60px; height:60px; border-radius:50%; vertical-align:middle; }
+img.avatar { width:40px; height:40px; border-radius:50%; vertical-align:middle; }

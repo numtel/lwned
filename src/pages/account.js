@@ -22,8 +22,8 @@ async function accountProfile(account, lwned, verification, lensHub) {
       <dd><a href="${explorer(account)}">${account}</a></dd>
       <dt>Lens Profile</dt>
       <dd class="lens-profile">${lensProfile ? `
-        <img alt="${lensProfile.handle} avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
-        <a href="https://lenster.xyz/u/${lensProfile.handle}">${lensProfile.handle}</a>
+        <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
+        <a href="https://lenster.xyz/u/${lensProfile.handle}">${lensProfile.handle}</a><br>
         <span class="post-count">Post count: ${lensProfile.pubCount}</span>
       ` : 'No Lens Profile found'}</dd>
       <dt>Coinpassport Verification Status</dt>
