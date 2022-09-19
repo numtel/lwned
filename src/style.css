@@ -10,3 +10,5 @@ ol.loans {}
 .status-badge.Canceled {background:#cff4fcbb;}
 
 [data-my-balance] { font-size:80%; font-weight:normal; }
+
+.lens-profile img { width:60px; height:60px; border-radius:50%; vertical-align:middle; }

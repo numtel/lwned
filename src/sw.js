@@ -24,6 +24,7 @@ const hostable = [
   'IERC20.abi',
 ];
 importScripts('/pages/loan.js');
+importScripts('/pages/account.js');
 importScripts('/pages/comments.js');
 importScripts('/pages/apply.js');
 importScripts('/pages/header.js');
@@ -69,7 +70,7 @@ async function loader(request) {
       const loan = await browser.methods.single(path[2]).call();
       out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser);
     } else if(path && path[1] === 'account') {
-      out = htmlHeader('Lwned');
+      out = htmlHeader('Lwned Account Profile') + await accountProfile(path[2], lwned, verification, lensHub);
     } else {
       out = htmlHeader('Lwned') + await loanList(url, lwned, browser);
     }
