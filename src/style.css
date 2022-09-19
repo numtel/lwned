@@ -12,3 +12,6 @@ ol.loans {}
 [data-my-balance] { font-size:80%; font-weight:normal; }
 
 img.avatar { width:40px; height:40px; border-radius:50%; vertical-align:middle; }
+
+.passport-badge { font-size: 0; display:inline-block; width: 18px; height: 24px; background:linear-gradient(90deg, #002a64, #070d2b 100%); border-right: 1px solid #ccc; border-radius:0 4px 4px 0; vertical-align:middle; margin-left:4px; box-shadow: 1px 1px 3px #0007;}
+.passport-badge:after { content: "P"; color:#fae3b7; font-size:1.3rem; font-weight:bold; line-height: 24px; padding-left:3px; }

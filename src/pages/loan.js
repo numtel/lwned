@@ -1,5 +1,5 @@
 
-async function loanDetails(loan, lensHub) {
+async function loanDetails(loan, lensHub, verification) {
   const tokens = await tokenData(loan.collateralTokens.concat(loan.token));
   const invested = await totalSupply(loan.loan);
   const loanDecimals = await decimals(loan.loan);
@@ -9,7 +9,7 @@ async function loanDetails(loan, lensHub) {
   const status = actualStatus(loan, now);
   return `
     <div class="loan">
-      ${await loanSpec(loan, tokens, invested, lensHub, status, now, true)}
+      ${await loanSpec(loan, tokens, invested, lensHub, verification, status, now, true)}
     </div>
     <section class="loan-text">${userInput(loan.text)}</section>
     ${status === '0' ? `
@@ -39,7 +39,7 @@ function actualStatus(loan, now) {
     loan.status);
 }
 
-async function loanSpec(loan, tokens, invested, lensHub, status, now, detailed) {
+async function loanSpec(loan, tokens, invested, lensHub, verification, status, now, detailed) {
   const fullRepayPercent = Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber()) / 100;
   const repayTime = loan.deadlineRepay > now ? ` within <time datetime="${new Date(loan.deadlineRepay * 1000).toJSON()}" title="${new Date(loan.deadlineRepay * 1000).toLocaleString()}">${remaining(loan.deadlineRepay - now, !detailed)}</time>` : '';
   const issueTime = loan.deadlineIssue > now ? ` within <time datetime="${new Date(loan.deadlineIssue * 1000).toJSON()}" title="${new Date(loan.deadlineIssue * 1000).toLocaleString()}">${remaining(loan.deadlineIssue - now, !detailed)}</time>` : '';
@@ -48,6 +48,7 @@ async function loanSpec(loan, tokens, invested, lensHub, status, now, detailed) 
   if(lensProfileId !== '0') {
     lensProfile = await lensHub.methods.getProfile(lensProfileId).call();
   }
+  const cpValid = await verification.methods.addressActive(loan.borrower).call();
 
   return `
     <h2>
@@ -57,7 +58,7 @@ async function loanSpec(loan, tokens, invested, lensHub, status, now, detailed) 
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${lensProfile ? `
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
         ${lensProfile.handle}
-      ` : ellipseAddress(loan.borrower)}</a></span>
+      ` : ellipseAddress(loan.borrower)}</a>${cpValid ? '<span class="passport-badge" title="Passport Verified">Passport Verified</span>' : ''}</span>
     <span class="amount">${status === '0' ? `Looking to raise ${tokens(loan.token, new web3.utils.BN(loan.amountToGive).sub(new web3.utils.BN(invested)).toString(), true)} of ` : status === '4' ? 'Did not raise ' : ''}${tokens(loan.token, loan.amountToGive)}${status === '0' ? `${issueTime}, will repay ${fullRepayPercent}%${repayTime}` : status === '1' ? `, waiting for repay of ${fullRepayPercent}%${repayTime}` : status === '2' ? `, repaid ${fullRepayPercent}%` : ''}</span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
@@ -95,11 +96,11 @@ function divestForm(loan) {
   `;
 }
 
-async function loanTable(data, tokens, invested, lensHub, start, total, now) {
+async function loanTable(data, tokens, invested, lensHub, verification, start, total, now) {
   let loanHTML = '';
   for(let index = 0; index<data.length; index++) {
     loanHTML += `
-      <li class="loan">${await loanSpec(data[index], tokens, invested[index], lensHub, actualStatus(data[index], now), now)}</li>
+      <li class="loan">${await loanSpec(data[index], tokens, invested[index], lensHub, verification, actualStatus(data[index], now), now)}</li>
     `;
   }
   return `
@@ -111,11 +112,11 @@ async function loanTable(data, tokens, invested, lensHub, start, total, now) {
   `;
 }
 
-async function loanList(url, lwned, browser, lensHub) {
+async function loanList(url, lwned, browser, lensHub, verification) {
   const views = [
     { label: 'Pending (Query irrelevant)',
       method: 'pending', count: 'pendingCount' },
-    { label: 'Pending with ID Hash (Query irrelevant)',
+    { label: 'Pending with verified passport (Query irrelevant)',
       method: 'pendingWithIdHash', count: 'pendingCountWithIdHash' },
     { label: 'Active (Query irrelevant)',
       method: 'active', count: 'activeCount' },
@@ -181,5 +182,5 @@ async function loanList(url, lwned, browser, lensHub) {
   for(let loan of result) {
     invested.push(await totalSupply(loan.loan));
   }
-  return viewForm + await loanTable(result, tokens, invested, lensHub, start, total, now);
+  return viewForm + await loanTable(result, tokens, invested, lensHub, verification, start, total, now);
 }

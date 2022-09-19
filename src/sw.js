@@ -65,14 +65,14 @@ async function loader(request) {
       out = htmlHeader('Apply for Loan') + applyForm(lwned);
     } else if(path && path[1] === 'loan') {
       const loan = await browser.methods.single(path[2]).call();
-      out = htmlHeader(userInput(loan.name)) + await loanDetails(loan, lensHub);
+      out = htmlHeader(userInput(loan.name)) + await loanDetails(loan, lensHub, verification);
     } else if(path && path[1] === 'comments') {
       const loan = await browser.methods.single(path[2]).call();
-      out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser, lensHub);
+      out = htmlHeader('Comments:' + userInput(loan.name)) + await loanComments(loan, url, browser, lensHub, verification);
     } else if(path && path[1] === 'account') {
       out = htmlHeader('Lwned Account Profile') + await accountProfile(path[2], lwned, verification, lensHub);
     } else {
-      out = htmlHeader('Lwned') + await loanList(url, lwned, browser, lensHub);
+      out = htmlHeader('Lwned') + await loanList(url, lwned, browser, lensHub, verification);
     }
   } catch(error) {
     console.error(error);
