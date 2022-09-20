@@ -44,7 +44,7 @@ window.connect = async function() {
   config = result.config;
   const walletEl = document.getElementById('wallet-status');
   walletEl.innerHTML = `
-    <a href="/account/${accounts[0]}"><button>Connected as ${ellipseAddress(accounts[0])}</button></a>
+    <a href="/account/${accounts[0]}" title="View Account Profile"><button>Connected as ${ellipseAddress(accounts[0])}</button></a>
     <button onclick="disconnect()">Disconnect Wallet</button>
   `;
 }

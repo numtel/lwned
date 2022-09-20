@@ -26,7 +26,7 @@ async function accountProfile(account, lwned, verification, lensHub) {
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
         <a href="https://lenster.xyz/u/${lensProfile.handle}">${lensProfile.handle}</a><br>
         <span class="post-count">Post count: ${lensProfile.pubCount}</span>
-      ` : 'No Lens Profile found'}</dd>
+      ` : 'No Lens Profile found.<br>Create one at <a href="https://lenster.xyz">Lenster.xyz</a>...'}</dd>
       <dt>Coinpassport Verification Status</dt>
       <dd class="coinpassport-status">
         ${cpExpiration !== '0' ? `
@@ -35,7 +35,7 @@ async function accountProfile(account, lwned, verification, lensHub) {
           <span class="country">Country: ${cpCountry !== '0' ? String.fromCharCode(cpCountry >> 16) + String.fromCharCode(cpCountry - ((cpCountry >> 16) << 16)) : 'Not published'}</span><br>
           <a href="/?method=byBorrowerIdHash&q=${cpIdHash}&start=0&count=100">Loans for this passport</a>
 
-        ` : 'No passport verification found'}
+        ` : 'No passport verification found.<br>Verify at <a href="https://coinpassport.net">Coinpassport.net</a>...'}
       </dd>
       <dt>Loan History</dt>
       <dd>

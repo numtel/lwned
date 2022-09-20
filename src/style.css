@@ -1,5 +1,5 @@
 
-span.token { font-size:1.5rem; padding:5px; }
+span.token, p.help { font-size:1.5rem; padding:5px; }
 .loan>span, .loan>a {display:block; padding:5px 0;}
 
 .status-badge { padding: 5px; border-radius: 4px; margin-right: 5px; font-size:1.5rem; vertical-align:middle; }

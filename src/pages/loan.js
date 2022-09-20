@@ -18,14 +18,14 @@ async function loanDetails(loan, lensHub, verification) {
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
         <button onclick="loanCancel('${loan.loan}')">Cancel</button>
       </p>
-      ${investForm(loan, maxInvest) + divestForm(loan)}
+      ${investForm(loan, maxInvest) + divestForm(loan, status)}
     ` : status === '1' ? `
       <p class="loan-actions">
         <button onclick="loanRepay('${loan.loan}', '${loan.token}', '${loan.amountToRepay}')">Repay ${tokens(loan.token, loan.amountToRepay, false, true)}</button>
         <span data-my-balance="${loan.token}"></span>
       </p>
     ` : status === '4' || status === '2' || status === '3' ? `
-      ${divestForm(loan)}
+      ${divestForm(loan, status)}
     ` : ''}
     </section>
   `;
@@ -73,6 +73,7 @@ function investForm(loan, maxInvest) {
   return `
     <form onsubmit="loanInvest(this); return false" data-loan="${loan.loan}" data-token="${loan.token}">
       <fieldset><legend>Invest</legend>
+      <p class="help">Investment entitles lender to share of repaid amount or collateral.</p>
       <div class="row">
       <label for="invest-amount">Amount <span data-my-balance="${loan.token}"></span></label>
       <input id="invest-amount" type="number" required min="0" max="${maxInvest}">
@@ -83,10 +84,11 @@ function investForm(loan, maxInvest) {
   `;
 }
 
-function divestForm(loan) {
+function divestForm(loan, status) {
   return `
     <form onsubmit="loanDivest(this); return false" data-loan="${loan.loan}" data-token="${loan.token}">
-      <fieldset><legend>Divest${loan.status == "2" ? ` from repayment of ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber()) / 100}%` : loan.status == "3" ? ` from collateral` : ''}</legend>
+      <fieldset><legend>Divest${status === "2" ? ` from repayment of ${Math.floor(new web3.utils.BN(loan.amountToRepay).mul(new web3.utils.BN(10000)).div(new web3.utils.BN(loan.amountToGive)).toNumber()) / 100}%` : status === "3" ? ` from collateral` : ''}</legend>
+      <p class="help">${status === "0" ? 'Remove any invested amount before the loan has been issued.' : status === "2" ? 'Claim share of repayment amount proportional to invested amount.' : status === "3" ? 'Claim share of collateral proportional to invested amount.' : status === "4" ? 'Remove any invested amount since loan will never be issued.' : ''}</p>
       <div class="row">
       <label for="divest-amount">Amount <span data-my-balance="${loan.loan}"></span></label>
       <input id="divest-amount" type="number" required min="0">
