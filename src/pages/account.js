@@ -16,6 +16,7 @@ async function accountProfile(account, lwned, verification, lensHub) {
     cpCountry = await verification.methods.getCountryCode(account).call();
   }
   return `
+    <section>
     <h2>Account Profile</h2>
     <dl>
       <dt>Wallet Address</dt>
@@ -29,7 +30,7 @@ async function accountProfile(account, lwned, verification, lensHub) {
       <dt>Coinpassport Verification Status</dt>
       <dd class="coinpassport-status">
         ${cpExpiration !== '0' ? `
-          <span class="expiration">Verified Passport expires: ${new Date(cpExpiration * 1000).toLocaleString()}</span><br>
+          <span class="expiration">Verified Passport expires: ${new Date(cpExpiration * 1000).toLocaleDateString()}</span><br>
           <span class="age">Age: ${cpOver21 ? 'Over 21' : cpOver18 ? 'Over 18' : 'No age data published'}</span><br>
           <span class="country">Country: ${cpCountry !== '0' ? String.fromCharCode(cpCountry >> 16) + String.fromCharCode(cpCountry - ((cpCountry >> 16) << 16)) : 'Not published'}</span><br>
           <a href="/?method=byBorrowerIdHash&q=${cpIdHash}&start=0&count=100">Loans for this passport</a>
@@ -42,5 +43,6 @@ async function accountProfile(account, lwned, verification, lensHub) {
         <a href="/?method=byLender&q=${account}&start=0&count=100">Loans as lender</a>
       </dd>
     </dl>
+    </section>
   `;
 }

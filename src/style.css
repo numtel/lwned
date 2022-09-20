@@ -1,6 +1,6 @@
 
-ol.loans {}
-.loan>span, .loan>a {display:block;}
+span.token { font-size:1.5rem; padding:5px; }
+.loan>span, .loan>a {display:block; padding:5px 0;}
 
 .status-badge { padding: 5px; border-radius: 4px; margin-right: 5px; font-size:1.5rem; vertical-align:middle; }
 .status-badge.Pending {background:#fff3cdbb;}
@@ -15,3 +15,14 @@ img.avatar { width:40px; height:40px; border-radius:50%; vertical-align:middle; 
 
 .passport-badge { font-size: 0; display:inline-block; width: 18px; height: 24px; background:linear-gradient(90deg, #002a64, #070d2b 100%); border-right: 1px solid #ccc; border-radius:0 4px 4px 0; vertical-align:middle; margin-left:4px; box-shadow: 1px 1px 3px #0007;}
 .passport-badge:after { content: "P"; color:#fae3b7; font-size:1.3rem; font-weight:bold; line-height: 24px; padding-left:3px; }
+
+@media (prefers-color-scheme: dark) {
+
+.status-badge.Pending {background:#ffe3009e;}
+.status-badge.Active {background:#0058ff9e;}
+.status-badge.Repaid {background:#00ff649e;}
+.status-badge.Defaulted {background:#ff00009e;}
+.status-badge.Canceled {background:#aeaeae9e;}
+.passport-badge { box-shadow:1px 1px 3px #fff7;}
+
+}

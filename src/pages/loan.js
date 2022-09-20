@@ -12,6 +12,7 @@ async function loanDetails(loan, lensHub, verification) {
       ${await loanSpec(loan, tokens, invested, lensHub, verification, status, now, true)}
     </div>
     <section class="loan-text">${userInput(loan.text)}</section>
+    <section>
     ${status === '0' ? `
       <p class="loan-actions" data-borrower="${loan.borrower}">
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
@@ -26,6 +27,7 @@ async function loanDetails(loan, lensHub, verification) {
     ` : status === '4' || status === '2' || status === '3' ? `
       ${divestForm(loan)}
     ` : ''}
+    </section>
   `;
 }
 
@@ -57,8 +59,7 @@ async function loanSpec(loan, tokens, invested, lensHub, verification, status, n
     </h2>
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${lensProfile ? `
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
-        ${lensProfile.handle}
-      ` : ellipseAddress(loan.borrower)}</a>${cpValid ? '<span class="passport-badge" title="Passport Verified">Passport Verified</span>' : ''}</span>
+        ${lensProfile.handle}` : ellipseAddress(loan.borrower)}</a>${cpValid ? '<span class="passport-badge" title="Passport Verified">Passport Verified</span>' : ''}</span>
     <span class="amount">${status === '0' ? `Looking to raise ${tokens(loan.token, new web3.utils.BN(loan.amountToGive).sub(new web3.utils.BN(invested)).toString(), true)} of ` : status === '4' ? 'Did not raise ' : ''}${tokens(loan.token, loan.amountToGive)}${status === '0' ? `${issueTime}, will repay ${fullRepayPercent}%${repayTime}` : status === '1' ? `, waiting for repay of ${fullRepayPercent}%${repayTime}` : status === '2' ? `, repaid ${fullRepayPercent}%` : ''}</span>
     <span class="collateral">Collateral: ${loan.collateralTokens.length ? loan.collateralTokens.map((collateralToken, index) => 
       tokens(collateralToken, loan.collateralAmounts[index])).join(', ') : 'None'}</span>
@@ -104,10 +105,12 @@ async function loanTable(data, tokens, invested, lensHub, verification, start, t
     `;
   }
   return `
+    <section>
     <p class="paging">${start+1}-${start+data.length} of ${total}</p>
     <ol class="loans" start="${start+1}">
       ${loanHTML}
     </ol>
+    </section>
 
   `;
 }
@@ -153,10 +156,10 @@ async function loanList(url, lwned, browser, lensHub, verification) {
         <input name="q" value="${htmlEscape(url.searchParams.get('q') || '')}">
         </label>
         <label><span>Start:</span>
-        <input name="start" value="${htmlEscape(url.searchParams.get('start') || '0')}">
+        <input name="start" inputmode="numeric" value="${htmlEscape(url.searchParams.get('start') || '0')}">
         </label>
         <label><span>Count:</span>
-        <input name="count" value="${htmlEscape(url.searchParams.get('count') || '100')}">
+        <input name="count" inputmode="numeric" value="${htmlEscape(url.searchParams.get('count') || '100')}">
         </label>
         <button>Update</button>
       </fieldset>

@@ -76,7 +76,7 @@ async function loader(request) {
     }
   } catch(error) {
     console.error(error);
-    out = htmlHeader('Lwned Error!') + `<p>An error has occurred!</p>`;
+    out = htmlHeader('Lwned Error!') + `<section><p>An error has occurred!</p><code>${error.message}</code></section>`;
   }
   return new Response(out, {
     headers: { 'Content-Type': 'text/html' }

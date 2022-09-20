@@ -8,7 +8,7 @@ async function loanComments(loan, url, browser, lensHub, verification) {
         <input name="start" value="${htmlEscape(url.searchParams.get('start') || '0')}">
         </label>
         <label><span>Count:</span>
-        <input name="count" value="${htmlEscape(url.searchParams.get('count') || '100')}">
+        <input name="count" inputmode="numeric" value="${htmlEscape(url.searchParams.get('count') || '100')}">
         </label>
         <button>Update</button>
       </fieldset>
@@ -51,10 +51,9 @@ async function commentRender(comment, now, lensHub, verification) {
   }
   const cpValid = await verification.methods.addressActive(comment.author).call();
   return `
-    <span class="author">Author: <a href="/account/${comment.author}" title="Author Profile">${lensProfile ? `
+    <span class="author"><a href="/account/${comment.author}" title="Author Profile">${lensProfile ? `
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
-        ${lensProfile.handle}
-      ` : ellipseAddress(comment.author)}</a>${cpValid ? '<span class="passport-badge" title="Passport Verified">Passport Verified</span>' : ''}</span>
+        ${lensProfile.handle}` : ellipseAddress(comment.author)}</a>${cpValid ? '<span class="passport-badge" title="Passport Verified">Passport Verified</span>' : ''}</span>
     <time datetime="${new Date(comment.timestamp * 1000).toJSON()}">${new Date(comment.timestamp * 1000).toLocaleString()}</time>
     <div class="comment-text">${userInput(comment.text)}</div>
   `;

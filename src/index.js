@@ -1,8 +1,10 @@
 import {
+  web3ReadOnly,
   wallet,
   applyDecimals,
   reverseDecimals,
   ellipseAddress,
+  ZERO_ACCOUNT,
 } from './wallet.js';
 
 let web3, web3Modal, accounts, config;
@@ -12,6 +14,8 @@ window.addEventListener('load', async function() {
   if(localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER")) {
     await connect();
   } else {
+    web3 = await web3ReadOnly();
+    accounts = [ZERO_ACCOUNT];
     walletEl.innerHTML = `<button onclick="connect()" title="Connect Wallet">Connect Wallet</button>`;
   }
 
@@ -59,7 +63,7 @@ window.submitNewLoanForm = async function(form) {
   const factory = new web3.eth.Contract(
     await (await fetch('/ILwned.abi')).json(),
     config.contracts.Lwned.address);
-  const loanToken = await erc20(form.querySelector('input[name="token"]').value);
+  const loanToken = await erc20(form.querySelector('#token').value);
   const tokenDecimals = await loanToken.methods.decimals().call();
   const collateralTokens = Array.from(form.querySelectorAll('.collateral input'))
     .map((el, index) => index % 2 === 0 ? el.value : undefined)
@@ -106,7 +110,7 @@ window.setToken = async function(el) {
 window.addCollateral = async function(el) {
   const div = document.createElement('div');
   div.classList.toggle('collateral-item', true);
-  div.innerHTML = '<div>Token: <input name="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span></span><div class="common">' + document.querySelector('.common').innerHTML + '</div></div><div>Amount: <input required><div class="common"><button type="button" onclick="removeCollateral(this)">Remove</button></div>';
+  div.innerHTML = '<div>Token: <input name="token" class="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span class="token"></span><div class="common">' + document.querySelector('.common').innerHTML + '</div></div><div>Amount: <input inputmode="decimal" required><div class="common"><button type="button" onclick="removeCollateral(this)">Remove</button></div>';
   el.parentNode.appendChild(div);
 }
 window.removeCollateral = function(button) {

@@ -1,16 +1,17 @@
 
 function applyForm(lwned) {
   return `
+    <section>
     <form id="new-loan" onsubmit="submitNewLoanForm(this); return false;">
       <fieldset><legend>New Loan Application</legend>
       <label for="loan-name">Loan Name</label>
       <input id="loan-name" required minlength="5" maxlength="160">
       <label for="token">Token</label>
-      <input name="token" id="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span></span>${commonTokens()}
+      <input name="token" id="token" class="token" required match="^0x[a-fA-F0-9]{40}$" onchange="setToken(this)"><span class="token"></span>${commonTokens()}
       <label for="loan-give">Loan Amount</label>
-      <input id="loan-give" name="toGive" required>
+      <input id="loan-give" inputmode="decimal" name="toGive" required>
       <label for="loan-repay">Repayment Amount</label>
-      <input id="loan-repay" name="toRepay" required>
+      <input id="loan-repay" inputmode="decimal" name="toRepay" required>
       <label for="deadline-issue">Issuance Deadline</label>
       <input id="deadline-issue" name="deadlineIssueDate" required type="date">
       <input name="deadlineIssueTime" required type="time">
@@ -27,6 +28,7 @@ function applyForm(lwned) {
       <p><a href="${explorer(lwned.options.address)}">View Contract on Explorer</a></p>
       </fieldset>
     </form>
+    </section>
   `;
 }
 
@@ -41,6 +43,6 @@ function commonTokens() {
 }
 
 function tokenButton(tokenAddress, tokenSymbol) {
-  return `<button type="button" onclick="const el=this.parentNode.parentNode.firstElementChild; el.value='${tokenAddress}'; el.onchange(); return false">${tokenSymbol}</button>`;
+  return `<button type="button" onclick="const el=this.parentNode.parentNode.querySelector('input.token'); el.value='${tokenAddress}'; el.onchange(); return false">${tokenSymbol}</button>`;
 }
 
