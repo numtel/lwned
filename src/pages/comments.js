@@ -32,7 +32,7 @@ async function commentList(data, start, total, now, lensHub, verification) {
   let commentHTML = '';
   for(let comment of data) {
     commentHTML += `
-      <li class="comment">${await commentRender(comment, now, lensHub, verification)}</li>
+      <li class="comment"><section>${await commentRender(comment, now, lensHub, verification)}</section></li>
     `;
   }
   return `

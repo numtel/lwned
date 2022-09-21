@@ -183,6 +183,10 @@ function reverseDecimals(input, decimals) {
       input = input.slice(0, sepIndex) + input.slice(sepIndex + 1) + zeroStr(trailingZeros);
     }
   }
+  // Remove leading zeros
+  while(input.slice(0,1) === '0') {
+    input = input.slice(1);
+  }
   return input;
 }
 

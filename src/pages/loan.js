@@ -14,17 +14,22 @@ async function loanDetails(loan, lensHub, verification) {
     <section class="loan-text">${userInput(loan.text)}</section>
     <section>
     ${status === '0' ? `
+      <p class="help">Canceling the loan will return the collateral and allow any investments to be divested.</p>
       <p class="loan-actions" data-borrower="${loan.borrower}">
         ${maxInvest === '0' ? `<button onclick="loanIssue('${loan.loan}')">Issue</button>` : ''}
         <button onclick="loanCancel('${loan.loan}')">Cancel</button>
       </p>
       ${investForm(loan, maxInvest) + divestForm(loan, status)}
     ` : status === '1' ? `
+      <p class="help">Anyone may repay the loan but it is always the borrower who receives the collateral returned.</p>
       <p class="loan-actions">
         <button onclick="loanRepay('${loan.loan}', '${loan.token}', '${loan.amountToRepay}')">Repay ${tokens(loan.token, loan.amountToRepay, false, true)}</button>
         <span data-my-balance="${loan.token}"></span>
       </p>
     ` : status === '4' || status === '2' || status === '3' ? `
+      ${status === '4' && loan.status === '0' ? `
+        <p><button onclick="loanCancel('${loan.loan}')">Claim Collateral</button></p>
+      ` : ''}
       ${divestForm(loan, status)}
     ` : ''}
     </section>
@@ -73,10 +78,10 @@ function investForm(loan, maxInvest) {
   return `
     <form onsubmit="loanInvest(this); return false" data-loan="${loan.loan}" data-token="${loan.token}">
       <fieldset><legend>Invest</legend>
-      <p class="help">Investment entitles lender to share of repaid amount or collateral.</p>
+      <p class="help">Investment entitles lender to share of repaid amount or collateral. Cannot invest more than amount remaining.</p>
       <div class="row">
       <label for="invest-amount">Amount <span data-my-balance="${loan.token}"></span></label>
-      <input id="invest-amount" type="number" required min="0" max="${maxInvest}">
+      <input id="invest-amount" inputmode="decimal" required>
       </div>
       <button>Submit</button>
       </fieldset>
@@ -91,7 +96,7 @@ function divestForm(loan, status) {
       <p class="help">${status === "0" ? 'Remove any invested amount before the loan has been issued.' : status === "2" ? 'Claim share of repayment amount proportional to invested amount.' : status === "3" ? 'Claim share of collateral proportional to invested amount.' : status === "4" ? 'Remove any invested amount since loan will never be issued.' : ''}</p>
       <div class="row">
       <label for="divest-amount">Amount <span data-my-balance="${loan.loan}"></span></label>
-      <input id="divest-amount" type="number" required min="0">
+      <input id="divest-amount" inputmode="decimal" required>
       </div>
       <button>Submit</button>
       </fieldset>
