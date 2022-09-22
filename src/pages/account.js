@@ -20,7 +20,7 @@ async function accountProfile(account, lwned, verification, lensHub) {
     <h2>Account Profile</h2>
     <dl>
       <dt>Wallet Address</dt>
-      <dd><a href="${explorer(account)}">${account}</a></dd>
+      <dd><a style="word-wrap: anywhere;" href="${explorer(account)}">${account}</a></dd>
       <dt>Lens Profile</dt>
       <dd class="lens-profile">${lensProfile ? `
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">

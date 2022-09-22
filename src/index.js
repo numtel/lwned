@@ -59,7 +59,7 @@ async function erc20(address) {
 }
 
 window.submitNewLoanForm = async function(form) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const factory = new web3.eth.Contract(
     await (await fetch('/ILwned.abi')).json(),
     config.contracts.Lwned.address);
@@ -75,7 +75,7 @@ window.submitNewLoanForm = async function(form) {
   for(let i = 0; i<collateralTokens.length; i++) {
     const token = await erc20(collateralTokens[i]);
     collateralAmounts[i] = reverseDecimals(collateralAmounts[i], await token.methods.decimals().call());
-    await token.methods.approve(factory.options.address, collateralAmounts[i]).send({from:accounts[0]});
+    await token.methods.approve(factory.options.address, collateralAmounts[i]).send({from:accounts[0], gasPrice: await gasPrice()});
   }
   // Process loan application
   const result = await factory.methods.newApplication(
@@ -89,7 +89,7 @@ window.submitNewLoanForm = async function(form) {
     collateralTokens, collateralAmounts,
     form.querySelector('textarea').value,
     form.querySelector('#loan-name').value,
-  ).send({from: accounts[0]});
+  ).send({from: accounts[0], gasPrice: await gasPrice()});
   window.location='/loan/' + result.events.NewApplication.returnValues.loan;
 }
 window.setToken = async function(el) {
@@ -118,7 +118,7 @@ window.removeCollateral = function(button) {
 }
 
 window.loanInvest = async function(form) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const loan = new web3.eth.Contract(
     await (await fetch('/ILoan.abi')).json(),
     form.getAttribute('data-loan'));
@@ -126,56 +126,62 @@ window.loanInvest = async function(form) {
   const tokenDecimals = await loanToken.methods.decimals().call();
   // Approve spend to loan
   const amount = reverseDecimals(form.querySelector('input').value, await loanToken.methods.decimals().call());
-  await loanToken.methods.approve(loan.options.address, amount).send({from:accounts[0]});
-  await loan.methods.invest(amount).send({from: accounts[0]});
+  await loanToken.methods.approve(loan.options.address, amount).send({from:accounts[0], gasPrice: await gasPrice()});
+  await loan.methods.invest(amount).send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
 }
 
 window.loanDivest = async function(form) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const loan = new web3.eth.Contract(
     await (await fetch('/ILoan.abi')).json(),
     form.getAttribute('data-loan'));
   const loanToken = await erc20(form.getAttribute('data-token'));
   const tokenDecimals = await loanToken.methods.decimals().call();
   const amount = reverseDecimals(form.querySelector('input').value, await loanToken.methods.decimals().call());
-  await loan.methods.divest(amount).send({from: accounts[0]});
+  await loan.methods.divest(amount).send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
 }
 
 window.loanIssue = async function(loanAddr) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
-  await loan.methods.loanIssue().send({from: accounts[0]});
+  await loan.methods.loanIssue().send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
 }
 
 window.loanCancel = async function(loanAddr) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
-  await loan.methods.loanCancel().send({from: accounts[0]});
+  await loan.methods.loanCancel().send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
 }
 
 window.loanRepay = async function(loanAddr, token, amount) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const loan = new web3.eth.Contract(await (await fetch('/ILoan.abi')).json(), loanAddr);
   const loanToken = await erc20(token);
   const tokenDecimals = await loanToken.methods.decimals().call();
   // Approve spend to loan
-  await loanToken.methods.approve(loanAddr, amount).send({from:accounts[0]});
-  await loan.methods.loanRepay().send({from: accounts[0]});
+  await loanToken.methods.approve(loanAddr, amount).send({from:accounts[0], gasPrice: await gasPrice()});
+  await loan.methods.loanRepay().send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
 }
 
 window.postComment = async function(form) {
-  if(!web3) await connect();
+  if(!config) await connect();
   const browser = new web3.eth.Contract(
     await (await fetch('/ILwnedBrowser.abi')).json(),
     config.contracts.LwnedBrowser.address);
   await browser.methods.postComment(
     form.getAttribute('data-loan'),
     form.querySelector('textarea').value
-  ).send({from: accounts[0]});
+  ).send({from: accounts[0], gasPrice: await gasPrice()});
   window.location.reload();
+}
+
+window.gasPrice = async function() {
+  const res = await fetch('https://gasstation-mainnet.matic.network/');
+  const data = await res.json();
+  return new web3.utils.BN(String(data.standard * 10)).mul(new web3.utils.BN('10').pow(new web3.utils.BN('8'))).toString();
 }

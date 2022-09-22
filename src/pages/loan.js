@@ -60,7 +60,7 @@ async function loanSpec(loan, tokens, invested, lensHub, verification, status, n
   return `
     <h2>
     <span class="status-badge ${states[status]}">${states[status]}</span>
-    <a class="loan-name" title="Loan Details" href="/loan/${loan.loan}">${loan.name}</a>
+    <a class="loan-name" title="Loan Details" href="${detailed ? explorer(loan.loan) : `/loan/${loan.loan}`}">${loan.name}</a>
     </h2>
     <span class="borrower">Borrower: <a href="/account/${loan.borrower}" title="Borrower Profile">${lensProfile ? `
         <img alt="${lensProfile.handle} avatar" class="avatar" src="https://ik.imagekit.io/lensterimg/tr:n-avatar,tr:di-placeholder.webp/https://lens.infura-ipfs.io/ipfs/${lensProfile.imageURI.slice(7)}">
